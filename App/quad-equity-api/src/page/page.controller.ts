@@ -676,7 +676,7 @@ export class PageController {
     files: Express.Multer.File[],
   ): Promise<any> {
     const baseUrl = Helper.getBaseUrl() || "http://localhost:2022";
-    const publicPath = path.join(__dirname, "../../public/page-content");
+    const publicPath = path.resolve(process.cwd(), "public/page-content");
     FileHelper.createDirectoryIfNotExists(publicPath);
 
     // Process banner image file
@@ -714,7 +714,7 @@ export class PageController {
     files: Express.Multer.File[],
   ): Promise<any> {
     const baseUrl = Helper.getBaseUrl() || "http://localhost:2022";
-    const publicPath = path.join(__dirname, "../../public/page-content");
+    const publicPath = path.resolve(process.cwd(), "public/page-content");
     FileHelper.createDirectoryIfNotExists(publicPath);
 
     // Process featured image file
@@ -752,7 +752,7 @@ export class PageController {
     files: Express.Multer.File[],
   ): Promise<Record<string, any>> {
     const baseUrl = Helper.getBaseUrl() || "http://localhost:2022";
-    const publicPath = path.join(__dirname, "../../public/page-content");
+    const publicPath = path.resolve(process.cwd(), "public/page-content");
     FileHelper.createDirectoryIfNotExists(publicPath);
 
     const processedContent = { ...content };
@@ -794,7 +794,7 @@ export class PageController {
     files: Express.Multer.File[],
   ): Promise<any[]> {
     const baseUrl = Helper.getBaseUrl() || "http://localhost:2022";
-    const publicPath = path.join(__dirname, "../../public/page-content");
+    const publicPath = path.resolve(process.cwd(), "public/page-content");
     FileHelper.createDirectoryIfNotExists(publicPath);
 
     const processedSections = pageSections.map((section, index) => ({
@@ -859,7 +859,7 @@ export class PageController {
     files: Express.Multer.File[],
   ): Promise<any[]> {
     const baseUrl = Helper.getBaseUrl() || "http://localhost:2022";
-    const publicPath = path.join(__dirname, "../../public/page-content");
+    const publicPath = path.resolve(process.cwd(), "public/page-content");
     FileHelper.createDirectoryIfNotExists(publicPath);
 
     const processedSections = blogSections.map((section, index) => ({

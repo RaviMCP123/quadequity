@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import { join } from "path";
+import { resolve } from "path";
 import moment from "moment-timezone";
 export class Helper {
   static generateAlphanumericId(length: number = 5): string {
@@ -28,7 +28,7 @@ export class Helper {
     defaultImage = "no-image.png",
   ): string {
     const baseUrl = process.env.APP_URL;
-    const imagePath = join(__dirname, "..", "..", "public", folder, filename);
+    const imagePath = resolve(process.cwd(), "public", folder, filename);
 
     if (filename && existsSync(imagePath)) {
       return `${baseUrl}/${folder}/${filename}`;
