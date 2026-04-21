@@ -1069,11 +1069,23 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
       };
     }) : [];
 
+    const bannerUrlFromState =
+      bannerImage.length > 0 && typeof bannerImage[0]?.url === "string"
+        ? bannerImage[0].url
+        : undefined;
+    const hasNewBannerUpload =
+      isPageTemplate && bannerImage.length > 0 && !!bannerImage[0]?.originFileObj;
+    const shouldKeepExistingBannerUrl =
+      !!bannerUrlFromState &&
+      !hasNewBannerUpload &&
+      !bannerUrlFromState.startsWith("blob:");
+
     const pageTemplateFields = isPageTemplate ? {
       pageSections: cleanedPageSections,
       bannerTitle: Object.keys(bannerTitle).length > 0 ? bannerTitle : undefined,
       bannerDescription: Object.keys(processedBannerDescription).length > 0 ? processedBannerDescription : undefined,
-      bannerImage: bannerImage.length > 0 && bannerImage[0]?.url ? bannerImage[0].url : undefined,
+      // Never persist browser preview blob URLs; backend will set real URL for new uploads.
+      bannerImage: shouldKeepExistingBannerUrl ? bannerUrlFromState : undefined,
     } : {};
 
     // Collect template content and handle file uploads
