@@ -3,6 +3,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { I18nValidationExceptionFilter } from "nestjs-i18n";
+import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import * as dotenv from "dotenv";
 import { AppModule } from "./app.module";
@@ -15,6 +16,12 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const publicDir = join(__dirname, "..", "public");
+  const pageContentDir = join(publicDir, "page-content");
+
+  if (!existsSync(pageContentDir)) {
+    mkdirSync(pageContentDir, { recursive: true });
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -24,7 +31,7 @@ async function bootstrap() {
     }),
   );
   app.enableCors();
-  app.useStaticAssets(join(__dirname, "..", "public"));
+  app.useStaticAssets(publicDir);
   app.setGlobalPrefix("api");
   app.setViewEngine("ejs");
 

@@ -906,7 +906,10 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
     };
     
     // Validate Page Template sections - title and description are required
-    const pageErrors: Record<number, { title?: string; description?: string }> = {};
+    const pageErrors: Record<
+      number,
+      { title?: string; description?: string; image?: string }
+    > = {};
     let hasPageErrors = false;
     
     if (isPageTemplate && pageSections && pageSections.length > 0) {
