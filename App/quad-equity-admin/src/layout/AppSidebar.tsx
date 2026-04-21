@@ -157,9 +157,9 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <img
-              src="/images/logo/logo.png"
-              alt="Logo"
-              className="w-10 h-10 sm:w-12 sm:h-12"
+              src="/images/icons/quad_logo.png"
+              alt="Collapsed Logo"
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
             />
           )}
         </Link>
