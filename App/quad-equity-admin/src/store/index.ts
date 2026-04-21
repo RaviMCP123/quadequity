@@ -7,6 +7,7 @@ import rootReducer from "../reducers";
 import "@services/pageApi";
 import "@services/userApi";
 import "@services/cmsCategoryApi";
+import "@services/contactRequestApi";
 
 const persistConfig = {
   key: "quad-equity-admin-root",

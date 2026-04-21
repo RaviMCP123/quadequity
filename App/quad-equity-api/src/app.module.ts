@@ -16,6 +16,7 @@ import { AdminModule } from "./admin/admin.module";
 import { PageModule } from "./page/page.module";
 import { AuditLogModule } from "./audit-log/audit-log.module";
 import { CmsModule } from "./cms/cms.module";
+import { ContactModule } from "./contact/contact.module";
 
 /**
  * Quad Equity CMS API — minimal surface:
@@ -53,6 +54,7 @@ const envFile =
     PageModule,
     AuditLogModule,
     CmsModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [

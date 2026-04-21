@@ -19,6 +19,11 @@ const getNavItems = (t: (key: string) => string): NavItem[] => [
     path: "/cms-management/category",
   },
   { icon: "page.png", name: t("sidebar.staticPages"), path: "/cms-management/Page" },
+  {
+    icon: "enquire.png",
+    name: t("sidebar.contactRequests"),
+    path: "/cms-management/contact-requests",
+  },
 ];
 
 const AppSidebar: React.FC = () => {

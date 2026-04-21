@@ -2,6 +2,22 @@ import { useEffect, useState } from 'react';
 import { submitContactForm } from '../../api/contact';
 import { pickLang, stripCmsInlineStyles } from '../../utils/cmsText';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[0-9]{8,15}$/;
+const ALLOWED_PHONE_KEYS = new Set([
+  'Backspace',
+  'Delete',
+  'ArrowLeft',
+  'ArrowRight',
+  'Tab',
+  'Home',
+  'End',
+]);
+
+function sanitizePhone(value) {
+  return String(value).replace(/\D/g, '').slice(0, 15);
+}
+
 /** @param {{ page: Record<string, unknown> }} props */
 export default function ContactTemplateRenderer({ page }) {
   useEffect(() => {
@@ -18,6 +34,7 @@ export default function ContactTemplateRenderer({ page }) {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({ email: '', phone: '' });
 
   const descriptionHtml = pickLang(page.description);
   const heroTitle = pickLang(page.mediaTitle) || pickLang(page.title);
@@ -36,8 +53,27 @@ export default function ContactTemplateRenderer({ page }) {
   const showEmailAddress = page.showEmail !== false;
   const showMessage = page.showComments !== false;
 
+  function validateForm() {
+    const nextErrors = { email: '', phone: '' };
+
+    if (showEmailAddress && !EMAIL_REGEX.test(email.trim())) {
+      nextErrors.email = 'Please enter a valid email address.';
+    }
+
+    if (showPhoneNumber && !PHONE_REGEX.test(phone.trim())) {
+      nextErrors.phone = 'Please enter a valid phone number.';
+    }
+
+    setFieldErrors(nextErrors);
+    return !nextErrors.email && !nextErrors.phone;
+  }
+
   async function onSubmit(e) {
     e.preventDefault();
+    if (!validateForm()) {
+      setStatus('idle');
+      return;
+    }
     setStatus('loading');
     setError('');
     try {
@@ -67,7 +103,7 @@ export default function ContactTemplateRenderer({ page }) {
                     <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
                     <rect x="2" y="4" width="20" height="16" rx="2" />
                   </svg>{' '}
-                  <a href={`mailto:${emailStr}`}>{emailStr}</a>
+                  <span>{emailStr}</span>
                 </p>
               ) : null}
               {phoneStr ? (
@@ -75,7 +111,7 @@ export default function ContactTemplateRenderer({ page }) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" />
                   </svg>{' '}
-                  <a href={`tel:${phoneStr.replace(/\s/g, '')}`}>{phoneStr}</a>
+                  <span>{phoneStr}</span>
                 </p>
               ) : null}
               {addressStr ? (
@@ -97,28 +133,75 @@ export default function ContactTemplateRenderer({ page }) {
               <form onSubmit={onSubmit}>
                 {showName ? (
                   <div className="input-box">
-                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
+                    <input type="text" placeholder=" " required value={name} onChange={(e) => setName(e.target.value)} />
                     <label>Name</label>
                   </div>
                 ) : null}
 
                 {showPhoneNumber ? (
                   <div className="input-box">
-                    <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={15}
+                      placeholder=" "
+                      required
+                      value={phone}
+                      onBeforeInput={(e) => {
+                        if (e.data && /\D/.test(e.data)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (ALLOWED_PHONE_KEYS.has(e.key)) return;
+                        if (!/^\d$/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onPaste={(e) => {
+                        const pastedText = e.clipboardData.getData('text');
+                        if (!/^\d+$/.test(pastedText)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                      }}
+                      onChange={(e) => {
+                        setPhone(sanitizePhone(e.target.value));
+                        if (fieldErrors.phone) {
+                          setFieldErrors((prev) => ({ ...prev, phone: '' }));
+                        }
+                      }}
+                    />
                     <label>Phone Number</label>
                   </div>
                 ) : null}
+                {fieldErrors.phone ? <p className="text-danger small mb-2">{fieldErrors.phone}</p> : null}
 
                 {showEmailAddress ? (
                   <div className="input-box">
-                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <input
+                      type="email"
+                      placeholder=" "
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (fieldErrors.email) {
+                          setFieldErrors((prev) => ({ ...prev, email: '' }));
+                        }
+                      }}
+                    />
                     <label>Email Address</label>
                   </div>
                 ) : null}
+                {fieldErrors.email ? <p className="text-danger small mb-2">{fieldErrors.email}</p> : null}
 
                 {showMessage ? (
                   <div className="input-box">
-                    <textarea required value={message} onChange={(e) => setMessage(e.target.value)} />
+                    <textarea placeholder=" " required value={message} onChange={(e) => setMessage(e.target.value)} />
                     <label>Message</label>
                   </div>
                 ) : null}

@@ -1,6 +1,22 @@
 import { useEffect, useState } from 'react';
 import { submitContactForm } from '../api/contact';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[0-9]{8,15}$/;
+const ALLOWED_PHONE_KEYS = new Set([
+  'Backspace',
+  'Delete',
+  'ArrowLeft',
+  'ArrowRight',
+  'Tab',
+  'Home',
+  'End',
+]);
+
+function sanitizePhone(value) {
+  return String(value).replace(/\D/g, '').slice(0, 15);
+}
+
 export default function ContactPage() {
   useEffect(() => {
     const link = document.createElement('link');
@@ -16,9 +32,29 @@ export default function ContactPage() {
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({ email: '', phone: '' });
+
+  function validateForm() {
+    const nextErrors = { email: '', phone: '' };
+
+    if (!EMAIL_REGEX.test(email.trim())) {
+      nextErrors.email = 'Please enter a valid email address.';
+    }
+
+    if (!PHONE_REGEX.test(phone.trim())) {
+      nextErrors.phone = 'Please enter a valid phone number.';
+    }
+
+    setFieldErrors(nextErrors);
+    return !nextErrors.email && !nextErrors.phone;
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
+    if (!validateForm()) {
+      setStatus('idle');
+      return;
+    }
     setStatus('loading');
     setError('');
     try {
@@ -76,22 +112,69 @@ export default function ContactPage() {
 
                 <form onSubmit={onSubmit}>
                   <div className="input-box">
-                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
+                    <input type="text" placeholder=" " required value={name} onChange={(e) => setName(e.target.value)} />
                     <label>Name</label>
                   </div>
 
                   <div className="input-box">
-                    <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={15}
+                      placeholder=" "
+                      required
+                      value={phone}
+                      onBeforeInput={(e) => {
+                        if (e.data && /\D/.test(e.data)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (ALLOWED_PHONE_KEYS.has(e.key)) return;
+                        if (!/^\d$/.test(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onPaste={(e) => {
+                        const pastedText = e.clipboardData.getData('text');
+                        if (!/^\d+$/.test(pastedText)) {
+                          e.preventDefault();
+                        }
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                      }}
+                      onChange={(e) => {
+                        setPhone(sanitizePhone(e.target.value));
+                        if (fieldErrors.phone) {
+                          setFieldErrors((prev) => ({ ...prev, phone: '' }));
+                        }
+                      }}
+                    />
                     <label>Phone Number</label>
                   </div>
+                  {fieldErrors.phone ? <p className="text-danger small mb-2">{fieldErrors.phone}</p> : null}
 
                   <div className="input-box">
-                    <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <input
+                      type="email"
+                      placeholder=" "
+                      required
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (fieldErrors.email) {
+                          setFieldErrors((prev) => ({ ...prev, email: '' }));
+                        }
+                      }}
+                    />
                     <label>Email Address</label>
                   </div>
+                  {fieldErrors.email ? <p className="text-danger small mb-2">{fieldErrors.email}</p> : null}
 
                   <div className="input-box">
-                    <textarea required value={message} onChange={(e) => setMessage(e.target.value)} />
+                    <textarea placeholder=" " required value={message} onChange={(e) => setMessage(e.target.value)} />
                     <label>Message</label>
                   </div>
 

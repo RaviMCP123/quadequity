@@ -3,6 +3,7 @@ import Page from "@pages/Page";
 import CmsCategory from "@pages/CmsCategory";
 import CmsHome from "@pages/CmsHome";
 import UserProfiles from "@pages/UserProfile";
+import ContactRequestPage from "@pages/ContactRequest";
 
 interface RouteConfig {
   path: string;
@@ -23,6 +24,11 @@ const mainRoute: RouteConfig[] = [
     path: "/cms-management/category",
     component: CmsCategory,
     title: "CMS Categories",
+  },
+  {
+    path: "/cms-management/contact-requests",
+    component: ContactRequestPage,
+    title: "Contact Requests",
   },
   {
     path: "/profile",

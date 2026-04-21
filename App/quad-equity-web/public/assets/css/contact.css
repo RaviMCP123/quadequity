@@ -89,9 +89,9 @@
 
 /* FLOAT EFFECT */
 .input-box input:focus+label,
-.input-box input:valid+label,
+.input-box input:not(:placeholder-shown)+label,
 .input-box textarea:focus+label,
-.input-box textarea:valid+label {
+.input-box textarea:not(:placeholder-shown)+label {
     top: -8px;
     left: 8px;
     font-size: 12px;
