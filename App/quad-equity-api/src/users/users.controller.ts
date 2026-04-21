@@ -136,7 +136,7 @@ export class UsersController {
     let image = "";
     if (file) {
       const userImages = await this.userService.findOne(userId);
-      const publicPath = path.join(__dirname, "../../public/user");
+      const publicPath = path.resolve(process.cwd(), "public/user");
       const thumbPath = path.join(publicPath, "thumb");
       const newFileName = FileHelper.generateUniqueFileName(file.originalname);
       if (userImages.image) {

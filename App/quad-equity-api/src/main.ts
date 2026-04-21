@@ -18,9 +18,17 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const publicDir = resolve(process.cwd(), "public");
   const pageContentDir = join(publicDir, "page-content");
+  const userDir = join(publicDir, "user");
+  const userThumbDir = join(userDir, "thumb");
 
   if (!existsSync(pageContentDir)) {
     mkdirSync(pageContentDir, { recursive: true });
+  }
+  if (!existsSync(userDir)) {
+    mkdirSync(userDir, { recursive: true });
+  }
+  if (!existsSync(userThumbDir)) {
+    mkdirSync(userThumbDir, { recursive: true });
   }
 
   app.useGlobalPipes(
