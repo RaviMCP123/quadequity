@@ -1,0 +1,5 @@
+/* Global overrides live in /public/assets/css. */
+
+#root {
+  min-height: 100vh;
+}

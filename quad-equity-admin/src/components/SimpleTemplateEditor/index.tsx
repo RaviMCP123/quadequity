@@ -1,0 +1,251 @@
+import React from "react";
+import { Form } from "react-bootstrap";
+import { Upload } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import CKEditor from "@components/CKEditor";
+import Label from "@components/form/Label";
+import { Language } from "interface/common";
+import { PageTemplate } from "@config/pageTemplates";
+import type { UploadFile } from "antd/es/upload/interface";
+import showToast from "@utils/toast";
+
+const MAX_SIZE_MB = 5;
+
+interface SimpleTemplateEditorProps {
+  template: PageTemplate;
+  languageList: Language[];
+  activeLang: string;
+  content: Record<string, any>;
+  onContentChange: (key: string, value: any, lang?: string) => void;
+  imageFiles?: Record<string, UploadFile[]>;
+  onImageChange?: (key: string, files: UploadFile[]) => void;
+}
+
+const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
+  template,
+  languageList,
+  activeLang,
+  content,
+  onContentChange,
+  imageFiles = {},
+  onImageChange,
+}) => {
+  const getContentValue = (key: string, lang?: string): string => {
+    const fieldContent = content?.[key];
+    if (!fieldContent) return "";
+    
+    if (lang && typeof fieldContent === "object" && !Array.isArray(fieldContent) && fieldContent !== null) {
+      const langValue = fieldContent[lang];
+      return typeof langValue === "string" ? langValue : "";
+    }
+    if (typeof fieldContent === "string") {
+      return fieldContent;
+    }
+    if (typeof fieldContent === "object" && !Array.isArray(fieldContent) && fieldContent !== null) {
+      const firstValue = Object.values(fieldContent)[0];
+      return typeof firstValue === "string" ? firstValue : "";
+    }
+    return "";
+  };
+
+  const handleImageChange = (key: string, fileList: UploadFile[]) => {
+    if (onImageChange) {
+      onImageChange(key, fileList);
+    }
+  };
+
+  const beforeUpload = (file: File) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      showToast("Invalid file type. Please select a JPEG, PNG, or JPG image.", "error");
+      return Upload.LIST_IGNORE;
+    }
+    const isLt5M = file.size / 1024 / 1024 < MAX_SIZE_MB;
+    if (!isLt5M) {
+      showToast(`Image must be smaller than ${MAX_SIZE_MB}MB!`, "error");
+      return Upload.LIST_IGNORE;
+    }
+    return false; // Prevent auto upload - file will be handled manually
+  };
+
+  const renderField = (field: any, lang: string) => {
+    const value = getContentValue(field.key, lang);
+    const currentField = content[field.key] || {};
+
+    switch (field.type) {
+      case "text":
+        return (
+          <Form.Group key={`${field.key}-${lang}`} className="mb-4">
+            <Label>
+              {field.label}
+              {field.required && <span className="text-error-500">*</span>}
+            </Label>
+            <Form.Control
+              type="text"
+              className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+              value={value}
+              onChange={(e) => {
+                onContentChange(field.key, { ...currentField, [lang]: e.target.value }, lang);
+              }}
+              placeholder={field.placeholder || ""}
+            />
+          </Form.Group>
+        );
+
+      case "richText":
+        return (
+          <Form.Group key={`${field.key}-${lang}`} className="mb-4">
+            <Label>
+              {field.label}
+              {field.required && <span className="text-error-500">*</span>}
+            </Label>
+            <CKEditor
+              keyName={`${field.key}-${lang}`}
+              value={String(value || "")}
+              setValue={(_key, editorValue) => {
+                onContentChange(field.key, { ...currentField, [lang]: editorValue }, lang);
+              }}
+            />
+          </Form.Group>
+        );
+
+      case "image":
+        const imageFileList = imageFiles[field.key] || [];
+        return (
+          <Form.Group key={`${field.key}-${lang}`} className="mb-4">
+            <Label>{field.label}</Label>
+            <Upload
+              listType="picture-card"
+              fileList={imageFileList}
+              beforeUpload={beforeUpload}
+              onChange={({ fileList }) => handleImageChange(field.key, fileList)}
+              maxCount={1}
+            >
+              {imageFileList.length < 1 && (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Upload</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Group>
+        );
+
+      case "link":
+        return (
+          <Form.Group key={`${field.key}-${lang}`} className="mb-4">
+            <Label>{field.label}</Label>
+            <Form.Control
+              type="text"
+              className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+              value={value}
+              onChange={(e) => {
+                onContentChange(field.key, { ...currentField, [lang]: e.target.value }, lang);
+              }}
+              placeholder={field.placeholder || ""}
+            />
+          </Form.Group>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Group fields by section for better organization
+  const groupFieldsBySection = () => {
+    const sections: Record<string, any[]> = {
+      banner: [],
+      overview: [],
+      steps: [],
+      closing: [],
+    };
+
+    // Always show all template fields, even if content is empty
+    template.fields.forEach((field) => {
+      if (field.key.startsWith("banner")) {
+        sections.banner.push(field);
+      } else if (field.key.startsWith("overview")) {
+        sections.overview.push(field);
+      } else if (field.key.startsWith("step")) {
+        sections.steps.push(field);
+      } else if (field.key.startsWith("closing")) {
+        sections.closing.push(field);
+      } else {
+        sections.overview.push(field);
+      }
+    });
+
+    return sections;
+  };
+
+  const sections = groupFieldsBySection();
+  
+  // Ensure we always render all fields from the template
+  // This ensures fields are visible even when adding a new page with no content
+
+  return (
+    <div className="simple-template-editor p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+      <div className="space-y-6">
+        {/* Banner Section */}
+        {sections.banner.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Banner Section</h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.banner.map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Overview Section */}
+        {sections.overview.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Overview Section</h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.overview.map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Steps Section */}
+        {sections.steps.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Steps</h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.steps
+                  .sort((a, b) => {
+                    // Sort steps by number (step1, step2, step3, step4)
+                    const aMatch = a.key.match(/step(\d+)/);
+                    const bMatch = b.key.match(/step(\d+)/);
+                    const aNum = aMatch ? parseInt(aMatch[1]) : 0;
+                    const bNum = bMatch ? parseInt(bMatch[1]) : 0;
+                    return aNum - bNum;
+                  })
+                  .map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Closing Section */}
+        {sections.closing.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Closing Section</h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.closing.map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SimpleTemplateEditor;

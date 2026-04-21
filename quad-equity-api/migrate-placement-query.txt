@@ -1,0 +1,23 @@
+// MongoDB Migration Query - Copy and paste this into MongoDB shell (mongosh)
+// This converts placement from ["quicklinks"] to [{ type: "quicklinks", sortOrder: 0 }]
+
+db.cmscategories.find({ 
+  placement: { $exists: true, $type: "array" },
+  "placement.0": { $type: "string" }
+}).forEach(function(doc) {
+  const newPlacement = doc.placement.map((item, index) => {
+    return {
+      type: item,
+      sortOrder: index
+    };
+  });
+  
+  db.cmscategories.updateOne(
+    { _id: doc._id },
+    { $set: { placement: newPlacement } }
+  );
+  
+  print("Updated: " + doc.name + " (" + doc._id + ")");
+});
+
+print("Migration completed!");
