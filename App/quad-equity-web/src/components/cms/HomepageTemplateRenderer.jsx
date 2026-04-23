@@ -30,8 +30,13 @@ export default function HomepageTemplateRenderer({ page }) {
     const img = resolveAssetUrl(c[`section${i}Image`], base);
     if (!t && !d && !img && !category && !logo) continue;
 
+    const footer =
+      isDedicatedHomeTemplate && buttonText && buttonLink ? (
+        <ArrowLink to={buttonLink}>{buttonText}</ArrowLink>
+      ) : null;
+
     rows.push(
-      <CardRow key={i} imageAlt={t || `Section ${i}`} imageSrc={img || '/assets/images/termly_img.png'}>
+      <CardRow key={i} imageAlt={t || `Section ${i}`} imageSrc={img || '/assets/images/termly_img.png'} footer={footer}>
         {category ? <h6 dangerouslySetInnerHTML={{ __html: category }} /> : null}
         {logo ? (
           <div className="hover-logo">
@@ -41,9 +46,6 @@ export default function HomepageTemplateRenderer({ page }) {
         ) : null}
         {t ? <h2 dangerouslySetInnerHTML={{ __html: t }} /> : null}
         {d ? <div dangerouslySetInnerHTML={{ __html: d }} /> : null}
-        {isDedicatedHomeTemplate && buttonText && buttonLink ? (
-          <ArrowLink to={buttonLink}>{buttonText}</ArrowLink>
-        ) : null}
       </CardRow>,
     );
   }
