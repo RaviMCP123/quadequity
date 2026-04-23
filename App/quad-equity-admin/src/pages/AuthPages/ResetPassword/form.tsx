@@ -67,9 +67,12 @@ export default function ResetPasswordForm() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
     setIsLoading(true);
-    data.username = requestBody?.username || "";
+    const payload = {
+      username: requestBody?.username || "",
+      password: data.password,
+    };
     try {
-      await dispatch(updatePassword(data, navigate));
+      await dispatch(updatePassword(payload, navigate));
     } finally {
       setIsLoading(false);
     }
@@ -82,28 +85,29 @@ export default function ResetPasswordForm() {
           <Link to="/" className="inline-block mb-3 sm:mb-4 md:mb-6 transition-transform hover:scale-105">
             <img 
               src="/images/logo/logo.png" 
-              alt="Termly Logo" 
+              alt="Quad Equity" 
               className="h-10 sm:h-12 md:h-14 lg:h-16 dark:hidden mx-auto"
+              style={{ filter: "brightness(0)" }}
             />
             <img 
               src="/images/logo/logo.png" 
-              alt="Termly Logo" 
+              alt="Quad Equity" 
               className="hidden h-10 sm:h-12 md:h-14 lg:h-16 dark:block mx-auto"
             />
           </Link>
           <div className="text-center">
-            <h1 className="mb-1.5 sm:mb-2 md:mb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            <h1 className="mb-1.5 sm:mb-2 md:mb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-950 dark:text-white">
               Reset Password
             </h1>
-            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-600 dark:text-gray-400 px-2">
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-brand-800/80 dark:text-brand-200/90 px-2 font-[family-name:var(--font-display)]">
               Set a new password for your account
             </p>
           </div>
         </div>
 
         <div className="flex justify-center items-center">
-          <div className="w-full max-w-lg p-4 sm:p-5 md:p-6 lg:p-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0056d2] via-[#0056d2] to-[#0056d2]"></div>
+          <div className="w-full max-w-lg p-4 sm:p-5 md:p-6 lg:p-8 bg-white/92 dark:bg-brand-900/90 backdrop-blur-xl rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border border-brand-200/70 dark:border-brand-800/60 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-500 via-brand-600 to-brand-800"></div>
             
             <Form onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-4 sm:space-y-5 md:space-y-6">
@@ -114,7 +118,7 @@ export default function ResetPasswordForm() {
                   </Label>
                   <div className="relative group">
                     <div className={`absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4 pointer-events-none transition-all duration-300 ${
-                      focusedField === "password" ? "text-[#0056d2] scale-110" : "text-gray-400"
+                      focusedField === "password" ? "text-brand-600 scale-110 dark:text-brand-400" : "text-gray-400"
                     }`}>
                       <svg
                         className="w-4 h-4 sm:w-5 sm:h-5"
@@ -134,7 +138,7 @@ export default function ResetPasswordForm() {
                       placeholder="Enter your new password"
                       type={showPassword ? "text" : "password"}
                       onFocus={() => setFocusedField("password")}
-                      className={`h-11 sm:h-12 md:h-13 lg:h-14 pl-10 sm:pl-12 pr-11 sm:pr-14 w-full rounded-lg sm:rounded-xl border-2 appearance-none px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base transition-all duration-300 placeholder:text-gray-400 focus:outline-none focus:ring-4 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500 bg-gray-50/50 text-gray-900 border-gray-300 focus:border-[#0056d2] focus:ring-[#0056d2]/20 focus:bg-white dark:border-gray-600 dark:focus:border-[#0056d2] dark:focus:bg-gray-900/80 ${
+                      className={`h-11 sm:h-12 md:h-13 lg:h-14 pl-10 sm:pl-12 pr-11 sm:pr-14 w-full rounded-lg sm:rounded-xl border-2 appearance-none px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base transition-all duration-300 placeholder:text-gray-400 focus:outline-none focus:ring-4 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-400/70 bg-brand-50/80 text-brand-950 border-brand-200 focus:border-brand-500 focus:ring-brand-500/25 focus:bg-white dark:border-brand-700 dark:focus:border-brand-400 dark:focus:bg-brand-950/80 ${
                         errors.password
                           ? "border-red-400 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500"
                           : ""
@@ -149,7 +153,7 @@ export default function ResetPasswordForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-3 sm:right-4 md:right-5 top-1/2 text-gray-400 hover:text-[#0056d2] dark:hover:text-[#569ff7] transition-all duration-200 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95"
+                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-3 sm:right-4 md:right-5 top-1/2 text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-all duration-200 p-1.5 sm:p-2 rounded-lg hover:bg-brand-100/80 dark:hover:bg-brand-800/80 active:scale-95"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
@@ -188,7 +192,7 @@ export default function ResetPasswordForm() {
                   </Label>
                   <div className="relative group">
                     <div className={`absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4 pointer-events-none transition-all duration-300 ${
-                      focusedField === "confirmPassword" ? "text-[#0056d2] scale-110" : "text-gray-400"
+                      focusedField === "confirmPassword" ? "text-brand-600 scale-110 dark:text-brand-400" : "text-gray-400"
                     }`}>
                       <svg
                         className="w-4 h-4 sm:w-5 sm:h-5"
@@ -208,7 +212,7 @@ export default function ResetPasswordForm() {
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm your new password"
                       onFocus={() => setFocusedField("confirmPassword")}
-                      className={`h-11 sm:h-12 md:h-13 lg:h-14 pl-10 sm:pl-12 pr-11 sm:pr-14 w-full rounded-lg sm:rounded-xl border-2 appearance-none px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base transition-all duration-300 placeholder:text-gray-400 focus:outline-none focus:ring-4 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500 bg-gray-50/50 text-gray-900 border-gray-300 focus:border-[#0056d2] focus:ring-[#0056d2]/20 focus:bg-white dark:border-gray-600 dark:focus:border-[#0056d2] dark:focus:bg-gray-900/80 ${
+                      className={`h-11 sm:h-12 md:h-13 lg:h-14 pl-10 sm:pl-12 pr-11 sm:pr-14 w-full rounded-lg sm:rounded-xl border-2 appearance-none px-3 sm:px-4 py-2.5 sm:py-3 md:py-4 text-sm sm:text-base transition-all duration-300 placeholder:text-gray-400 focus:outline-none focus:ring-4 dark:bg-brand-950/50 dark:text-white dark:placeholder:text-brand-400/70 bg-brand-50/80 text-brand-950 border-brand-200 focus:border-brand-500 focus:ring-brand-500/25 focus:bg-white dark:border-brand-700 dark:focus:border-brand-400 dark:focus:bg-brand-950/80 ${
                         errors.confirmPassword
                           ? "border-red-400 focus:border-red-500 focus:ring-red-500/20 dark:border-red-500"
                           : ""
@@ -223,7 +227,7 @@ export default function ResetPasswordForm() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-3 sm:right-4 md:right-5 top-1/2 text-gray-400 hover:text-[#0056d2] dark:hover:text-[#569ff7] transition-all duration-200 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95"
+                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-3 sm:right-4 md:right-5 top-1/2 text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-all duration-200 p-1.5 sm:p-2 rounded-lg hover:bg-brand-100/80 dark:hover:bg-brand-800/80 active:scale-95"
                       aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                     >
                       {showConfirmPassword ? (
@@ -238,7 +242,7 @@ export default function ResetPasswordForm() {
 
                 <div className="pt-1 sm:pt-2">
                   <Button
-                    className="w-full h-11 sm:h-12 md:h-13 lg:h-14 text-xs sm:text-sm md:text-base font-bold rounded-lg sm:rounded-xl bg-gradient-to-r from-[#0056d2] via-[#0056d2] to-[#0056d2] hover:from-[#0056D2] hover:via-[#0056d2] hover:to-[#0056D2] !text-white dark:!text-white shadow-lg hover:shadow-xl hover:shadow-[#0056d2]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-11 sm:h-12 md:h-13 lg:h-14 text-xs sm:text-sm md:text-base font-bold rounded-lg sm:rounded-xl bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700 hover:from-brand-600 hover:via-brand-700 hover:to-brand-800 !text-brand-950 dark:!text-brand-950 shadow-lg hover:shadow-xl hover:shadow-brand-500/35 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     size="md"
                     disabled={isLoading}
                   >
@@ -289,7 +293,7 @@ export default function ResetPasswordForm() {
                 <div className="pt-3 sm:pt-4 text-center">
                   <Link
                     to="/signin"
-                    className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-[#0056d2] hover:text-[#0056D2] dark:text-[#569ff7] dark:hover:text-[#e63946] transition-all duration-200 hover:underline"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-400 dark:hover:text-brand-300 transition-all duration-200 hover:underline"
                   >
                     <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                     Back to Login

@@ -37,6 +37,29 @@ export class CmsCategoryService {
     });
   }
 
+  private escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  private async ensureUniqueName(name: string, excludeId?: string): Promise<void> {
+    const normalizedName = _.trim(name).replace(/\s+/g, " ");
+    const query: any = {
+      name: {
+        $regex: `^${this.escapeRegex(normalizedName)}$`,
+        $options: "i",
+      },
+    };
+
+    if (excludeId) {
+      query._id = { $ne: new Types.ObjectId(excludeId) };
+    }
+
+    const existing = await this.cmsCategoryModel.findOne(query);
+    if (existing) {
+      throw new ConflictException("Category name already exists.");
+    }
+  }
+
   /**
    * Ensures slug uniqueness by appending a number if needed.
    * @param slug - The base slug
@@ -216,6 +239,8 @@ export class CmsCategoryService {
    * @returns The created category
    */
   async create(createDto: CreateCmsCategoryDto): Promise<CmsCategory> {
+    await this.ensureUniqueName(createDto.name);
+
     // Generate slug if not provided
     let slug = createDto.slug;
     if (!slug && createDto.name) {
@@ -287,6 +312,7 @@ export class CmsCategoryService {
 
     // Handle name and slug
     if (updateDto.name !== undefined) {
+      await this.ensureUniqueName(updateDto.name, id);
       updateData.name = updateDto.name;
       // If name changed and slug not provided, regenerate slug
       if (!updateDto.slug && updateDto.name !== category.name) {

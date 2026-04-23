@@ -23,6 +23,10 @@ export class ContactService {
     };
   }
 
+  private escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
   async create(dto: CreatePublicContactDto): Promise<ContactSubmission> {
     const { firstName, lastName } = this.splitName(dto.name);
     const doc = new this.contactModel({
@@ -48,11 +52,59 @@ export class ContactService {
     const sort: Record<string, 1 | -1> = { [sortField]: direction };
 
     const filter: Record<string, unknown> = {};
+    if (query.name?.trim()) {
+      const normalizedName = query.name.trim().replace(/\s+/g, " ");
+      const escapedName = this.escapeRegex(normalizedName);
+      filter.$or = [
+        {
+          firstName: {
+            $regex: escapedName,
+            $options: "i",
+          },
+        },
+        {
+          lastName: {
+            $regex: escapedName,
+            $options: "i",
+          },
+        },
+        {
+          $expr: {
+            $regexMatch: {
+              input: {
+                $trim: {
+                  input: { $concat: ["$firstName", " ", "$lastName"] },
+                },
+              },
+              regex: escapedName,
+              options: "i",
+            },
+          },
+        },
+      ];
+    }
     if (query.email?.trim()) {
       filter.email = {
         $regex: query.email.trim(),
         $options: "i",
       };
+    }
+    if (query.createdAt?.trim()) {
+      const [start, end] = query.createdAt.split("TO");
+      if (start && end) {
+        const startDate = new Date(`${start}T00:00:00.000Z`);
+        const endDate = new Date(`${end}T23:59:59.999Z`);
+
+        if (
+          !Number.isNaN(startDate.getTime()) &&
+          !Number.isNaN(endDate.getTime())
+        ) {
+          filter.createdAt = {
+            $gte: startDate,
+            $lte: endDate,
+          };
+        }
+      }
     }
 
     const [results, total] = await Promise.all([

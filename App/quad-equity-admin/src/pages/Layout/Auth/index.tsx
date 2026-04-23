@@ -2,7 +2,6 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { RootState } from "store";
-import ThemeTogglerTwo from "@components/common/ThemeTogglerTwo";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -34,12 +33,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
       <div className="relative flex min-h-screen">
         <div className="flex flex-col justify-center w-full px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8 lg:px-12 lg:py-12 xl:px-20 xl:py-16">
           {children}
-        </div>
-
-        <div className="fixed z-50 bottom-4 right-4 sm:bottom-8 sm:right-8">
-          <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white/85 dark:bg-brand-900/85 backdrop-blur-xl shadow-xl border border-brand-200/60 dark:border-brand-800/60">
-            <ThemeTogglerTwo />
-          </div>
         </div>
       </div>
     </div>

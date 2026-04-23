@@ -6,7 +6,7 @@ import Form from "./form";
 const ForgotPassword: React.FC = () => {
   return (
     <>
-      <PageMeta title="ForgotPassword" />
+      <PageMeta title="Forgot Password — Quad Equity CMS" />
       <AuthLayout>
         <Form />
       </AuthLayout>

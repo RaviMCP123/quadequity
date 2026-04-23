@@ -79,6 +79,17 @@ export const pageApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Page"],
     }),
+    updatePageStatus: builder.mutation<
+      ApiResponse,
+      { id: string; status: boolean }
+    >({
+      query: ({ id, status }) => ({
+        url: `${API.GET_PAGE}/${id}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["Page"],
+    }),
   }),
 });
 
@@ -88,5 +99,6 @@ export const {
   useCreatePageMutation,
   useUpdatePageMutation,
   useDeletePageMutation,
+  useUpdatePageStatusMutation,
 } = pageApi;
 

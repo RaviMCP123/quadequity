@@ -30,6 +30,8 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
   imageFiles = {},
   onImageChange,
 }) => {
+  const getRawContentValue = (key: string): any => content?.[key];
+
   const getContentValue = (key: string, lang?: string): string => {
     const fieldContent = content?.[key];
     if (!fieldContent) return "";
@@ -46,6 +48,30 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
       return typeof firstValue === "string" ? firstValue : "";
     }
     return "";
+  };
+
+  const setFieldValue = (field: any, lang: string, nextValue: string) => {
+    const currentField = content[field.key] || {};
+    if (field.multilingual === false) {
+      onContentChange(field.key, nextValue);
+      return;
+    }
+    onContentChange(field.key, { ...currentField, [lang]: nextValue }, lang);
+  };
+
+  const isFieldVisible = (field: any): boolean => {
+    if (!field.showWhen) return true;
+    const dependentRaw = getRawContentValue(field.showWhen.key);
+    if (dependentRaw == null) return false;
+    const dependentValue =
+      typeof dependentRaw === "string"
+        ? dependentRaw
+        : typeof dependentRaw === "object" && dependentRaw !== null
+          ? (dependentRaw[activeLang] ??
+              Object.values(dependentRaw)[0] ??
+              "")
+          : "";
+    return String(dependentValue).toLowerCase() === String(field.showWhen.equals).toLowerCase();
   };
 
   const handleImageChange = (key: string, fileList: UploadFile[]) => {
@@ -69,8 +95,11 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
   };
 
   const renderField = (field: any, lang: string) => {
+    if (!isFieldVisible(field)) {
+      return null;
+    }
+
     const value = getContentValue(field.key, lang);
-    const currentField = content[field.key] || {};
 
     switch (field.type) {
       case "text":
@@ -85,7 +114,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
               className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
               value={value}
               onChange={(e) => {
-                onContentChange(field.key, { ...currentField, [lang]: e.target.value }, lang);
+                setFieldValue(field, lang, e.target.value);
               }}
               placeholder={field.placeholder || ""}
             />
@@ -103,7 +132,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
               keyName={`${field.key}-${lang}`}
               value={String(value || "")}
               setValue={(_key, editorValue) => {
-                onContentChange(field.key, { ...currentField, [lang]: editorValue }, lang);
+                setFieldValue(field, lang, editorValue);
               }}
             />
           </Form.Group>
@@ -113,7 +142,10 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
         const imageFileList = imageFiles[field.key] || [];
         return (
           <Form.Group key={`${field.key}-${lang}`} className="mb-4">
-            <Label>{field.label}</Label>
+            <Label>
+              {field.label}
+              {field.required && <span className="text-error-500">*</span>}
+            </Label>
             <Upload
               listType="picture-card"
               fileList={imageFileList}
@@ -134,16 +166,43 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
       case "link":
         return (
           <Form.Group key={`${field.key}-${lang}`} className="mb-4">
-            <Label>{field.label}</Label>
+            <Label>
+              {field.label}
+              {field.required && <span className="text-error-500">*</span>}
+            </Label>
             <Form.Control
               type="text"
               className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
               value={value}
               onChange={(e) => {
-                onContentChange(field.key, { ...currentField, [lang]: e.target.value }, lang);
+                setFieldValue(field, lang, e.target.value);
               }}
               placeholder={field.placeholder || ""}
             />
+          </Form.Group>
+        );
+
+      case "select":
+        return (
+          <Form.Group key={`${field.key}-${lang}`} className="mb-4">
+            <Label>
+              {field.label}
+              {field.required && <span className="text-error-500">*</span>}
+            </Label>
+            <Form.Control
+              as="select"
+              className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+              value={value || field.options?.[0]?.value || ""}
+              onChange={(e) => {
+                setFieldValue(field, lang, e.target.value);
+              }}
+            >
+              {(field.options || []).map((option: { label: string; value: string }) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Form.Control>
           </Form.Group>
         );
 

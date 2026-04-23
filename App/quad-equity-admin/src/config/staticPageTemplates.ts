@@ -3,6 +3,7 @@
  * Stored in the database as `page.templateKey`.
  */
 export const STATIC_PAGE_TEMPLATES = [
+  { value: "home_template", label: "Home Template" },
   { value: "page_template", label: "Page Template" },
   { value: "innerpage_template", label: "Inner Page Template" },
   { value: "contactus_template", label: "Contact Us" },
@@ -19,9 +20,10 @@ export const PAGE_LIKE_CANONICAL_KEYS: StaticPageTemplateKey[] = [
 ];
 
 const LEGACY_TO_FOUR: Record<string, string> = {
+  home_template: "home_template",
   PAGE_TEMPLATE_V1: "page_template",
   INNER_PAGE_V1: "innerpage_template",
-  HOMEPAGE_V1: "page_template",
+  HOMEPAGE_V1: "home_template",
   "contact-us": "contactus_template",
   "footer-template": "footer_template",
   faq: "page_template",
@@ -43,6 +45,7 @@ export function canonicalizeStaticTemplateKey(
   const k = (key || "").trim();
 
   if (
+    k === "home_template" ||
     k === "page_template" ||
     k === "innerpage_template" ||
     k === "portfolio_template" ||

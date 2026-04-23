@@ -70,28 +70,29 @@ export default function VerificationForm() {
           <Link to="/" className="inline-block mb-3 sm:mb-4 md:mb-6 transition-transform hover:scale-105">
             <img 
               src="/images/logo/logo.png" 
-              alt="Termly Logo" 
+              alt="Quad Equity" 
               className="h-10 sm:h-12 md:h-14 lg:h-16 dark:hidden mx-auto"
+              style={{ filter: "brightness(0)" }}
             />
             <img 
               src="/images/logo/logo.png" 
-              alt="Termly Logo" 
+              alt="Quad Equity" 
               className="hidden h-10 sm:h-12 md:h-14 lg:h-16 dark:block mx-auto"
             />
           </Link>
           <div className="text-center">
-            <h1 className="mb-1.5 sm:mb-2 md:mb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            <h1 className="mb-1.5 sm:mb-2 md:mb-3 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-brand-950 dark:text-white">
               Verify Your Account
             </h1>
-            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-600 dark:text-gray-400 px-2">
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-brand-800/80 dark:text-brand-200/90 px-2 font-[family-name:var(--font-display)]">
               Enter the 6-digit code sent to your registered email
             </p>
           </div>
         </div>
 
         <div className="flex justify-center items-center">
-          <div className="w-full max-w-lg p-4 sm:p-5 md:p-6 lg:p-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0056d2] via-[#0056d2] to-[#0056d2]"></div>
+          <div className="w-full max-w-lg p-4 sm:p-5 md:p-6 lg:p-8 bg-white/92 dark:bg-brand-900/90 backdrop-blur-xl rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl border border-brand-200/70 dark:border-brand-800/60 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-500 via-brand-600 to-brand-800"></div>
             
             <Form onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-4 sm:space-y-5 md:space-y-6">
@@ -119,7 +120,7 @@ export default function VerificationForm() {
                         />
                       </svg>
                       <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                        Code expires in: <span className="font-semibold text-[#0056d2] dark:text-[#569ff7]">{formatTime(timeLeft)}</span>
+                        Code expires in: <span className="font-semibold text-brand-700 dark:text-brand-400">{formatTime(timeLeft)}</span>
                       </span>
                     </div>
                   )}
@@ -155,7 +156,7 @@ export default function VerificationForm() {
                       className={`font-semibold transition-all duration-200 hover:underline ${
                         !isExpired && timeLeft > 0
                           ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
-                          : "text-[#0056d2] hover:text-[#0056D2] dark:text-[#569ff7] dark:hover:text-[#e63946]"
+                          : "text-brand-700 hover:text-brand-800 dark:text-brand-400 dark:hover:text-brand-300"
                       }`}
                     >
                       Resend
@@ -165,7 +166,7 @@ export default function VerificationForm() {
 
                 <div className="pt-1 sm:pt-2">
                   <Button
-                    className="w-full h-11 sm:h-12 md:h-13 lg:h-14 text-xs sm:text-sm md:text-base font-bold rounded-lg sm:rounded-xl bg-gradient-to-r from-[#0056d2] via-[#0056d2] to-[#0056d2] hover:from-[#0056D2] hover:via-[#0056d2] hover:to-[#0056D2] !text-white dark:!text-white shadow-lg hover:shadow-xl hover:shadow-[#0056d2]/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-11 sm:h-12 md:h-13 lg:h-14 text-xs sm:text-sm md:text-base font-bold rounded-lg sm:rounded-xl bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700 hover:from-brand-600 hover:via-brand-700 hover:to-brand-800 !text-brand-950 dark:!text-brand-950 shadow-lg hover:shadow-xl hover:shadow-brand-500/35 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     size="md"
                     disabled={isLoading || otp.length !== 6 || isExpired}
                   >
@@ -216,7 +217,7 @@ export default function VerificationForm() {
                 <div className="pt-3 sm:pt-4 text-center">
                   <Link
                     to="/signin"
-                    className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-[#0056d2] hover:text-[#0056D2] dark:text-[#569ff7] dark:hover:text-[#e63946] transition-all duration-200 hover:underline"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-brand-700 hover:text-brand-800 dark:text-brand-400 dark:hover:text-brand-300 transition-all duration-200 hover:underline"
                   >
                     <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                     Back to Login

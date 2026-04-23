@@ -2,6 +2,7 @@ import { Module, forwardRef } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
+import { OtpController } from "./otp.controller";
 import { UsersModule } from "../users/users.module";
 import { JwtStrategy } from "./jwt.strategy";
 import { AuditLogModule } from "../audit-log/audit-log.module";
@@ -16,6 +17,6 @@ import { AuditLogModule } from "../audit-log/audit-log.module";
     }),
   ],
   providers: [AuthService, JwtStrategy],
-  controllers: [AuthController],
+  controllers: [AuthController, OtpController],
 })
 export class AuthModule {}

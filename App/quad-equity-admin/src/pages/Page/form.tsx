@@ -249,7 +249,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
   // Four static template keys: page_template, contactus_template, portfolio_template, footer_template (plus legacy)
   const isPageTemplate = isPageWithSectionsTemplate(currentTemplateKey);
   const isPortfolioTemplate = currentTemplateKey === "portfolio_template";
-  const isHomePage = currentTemplateKey === "HOMEPAGE_V1";
+  const isHomePage = currentTemplateKey === "home_template" || currentTemplateKey === "HOMEPAGE_V1";
   const isInnerPageTemplate = isInnerPageContentTemplate(currentTemplateKey);
   const isContactUs = isContactContentTemplate(currentTemplateKey);
   const isRegisterSchool = currentTemplateKey === "register-school";
@@ -260,7 +260,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
   // This is computed immediately when editing, so template editor can show
   const templateConfig = React.useMemo(() => {
     if (isHomePage) {
-      return getTemplateByKey('HOMEPAGE_V1');
+      return getTemplateByKey('home_template');
     }
     if (isInnerPageTemplate) {
       return getTemplateByKey('INNER_PAGE_V1');
@@ -1327,7 +1327,8 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
   const isTemplateMode = React.useMemo(() => {
     // Page Template is dynamic (not using SimpleTemplateEditor), so exclude it
     const hasHomePageTemplate = isHomePage && templateConfig;
-    const hasItemHomePage = isEditing && item?.templateKey === 'HOMEPAGE_V1' && templateConfig;
+    const hasItemHomePage =
+      isEditing && (item?.templateKey === 'HOMEPAGE_V1' || item?.templateKey === 'home_template') && templateConfig;
     const hasInnerPageTemplate = isInnerPageTemplate && templateConfig;
     const hasItemInnerPage = isEditing && item?.templateKey === 'innerpage_template' && templateConfig;
     return hasHomePageTemplate || hasItemHomePage || hasInnerPageTemplate || hasItemInnerPage;

@@ -203,6 +203,11 @@ a {
     border-bottom: 1px solid var(--navy);
 }
 
+.nav-list a.nav-active {
+    color: inherit;
+    border-bottom: 1px solid currentColor;
+}
+
 .header-section.sticky .header-flex .nav-list a {
     color: white;
 }
@@ -216,7 +221,17 @@ a {
 }
 
 .nav-white a:hover{
-    border-bottom: white;
+    border-bottom: 1px solid white;
+}
+
+.header-section.sticky .header-flex .nav-list a.nav-active,
+.nav-white a.nav-active {
+    color: white;
+    border-bottom: 1px solid white;
+}
+
+.MenuNavbar-offcanvas .menu-list li a.nav-active {
+    color: var(--gold);
 }
 
 .hero-section {
@@ -668,6 +683,60 @@ footer {
     /* border: 1px solid #dcdcd21a; */
     /* padding-block: 16px; */
     color: white;
+}
+
+.footer-content {
+    align-items: flex-start;
+}
+
+.footer-column {
+    padding-inline: 24px;
+}
+
+.footer-links-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.footer-social-links {
+    display: flex;
+    gap: 8px;
+}
+
+.footer-block address,
+.footer-block p {
+    margin-bottom: 0;
+}
+
+.footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    margin-bottom: 20px;
+}
+
+.footer-nav-side {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 0;
+}
+
+.footer-nav a {
+    color: white;
+    text-decoration: none;
+    font-family: "DM Sans", sans-serif;
+    font-weight: 400;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.footer-nav a:hover {
+    border-bottom-color: white;
 }
 
 .section-product {

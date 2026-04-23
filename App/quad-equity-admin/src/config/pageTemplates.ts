@@ -2,12 +2,14 @@ import { STATIC_PAGE_TEMPLATES } from "./staticPageTemplates";
 
 export interface TemplateField {
   key: string;
-  type: "text" | "richText" | "image" | "imageArray" | "pdf" | "link";
+  type: "text" | "richText" | "image" | "imageArray" | "pdf" | "link" | "select";
   label: string;
   required?: boolean;
   multilingual?: boolean; // Default: true
   placeholder?: string;
   helpText?: string;
+  options?: Array<{ label: string; value: string }>;
+  showWhen?: { key: string; equals: string };
 }
 
 export interface PageTemplate {
@@ -62,7 +64,7 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
     key: "INNER_PAGE_V1",
     name: "Inner Page Template",
     description:
-      "Termly-style inner page layout: top-left image, top-right image, bottom-left text, and bottom-right image.",
+      "Inner page layout with 2 required images (top row), required left text, and an optional third right block as image or logo with link.",
     fields: [
       {
         key: "topLeftImage",
@@ -79,21 +81,226 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
       {
         key: "bottomLeftText",
         type: "richText",
-        label: "Bottom Left Text",
+        label: "Left Text Content",
         required: true,
         placeholder: "Add the inner page text content...",
       },
       {
-        key: "bottomRightImage",
-        type: "image",
-        label: "Bottom Right Image",
+        key: "thirdRightType",
+        type: "select",
+        label: "Third Right Block Type",
         required: true,
+        multilingual: false,
+        options: [
+          { label: "Image", value: "image" },
+          { label: "Logos with links", value: "logos" },
+        ],
+      },
+      {
+        key: "thirdImage",
+        type: "image",
+        label: "Third Right Image",
+        required: false,
+        showWhen: { key: "thirdRightType", equals: "image" },
+      },
+      {
+        key: "logo1Image",
+        type: "image",
+        label: "Logo 1",
+        required: true,
+        showWhen: { key: "thirdRightType", equals: "logos" },
+      },
+      {
+        key: "logo1Url",
+        type: "link",
+        label: "Logo 1 Link",
+        required: true,
+        multilingual: false,
+        placeholder: "https://example.com/",
+        showWhen: { key: "thirdRightType", equals: "logos" },
+      },
+      {
+        key: "logo2Image",
+        type: "image",
+        label: "Logo 2",
+        required: true,
+        showWhen: { key: "thirdRightType", equals: "logos" },
+      },
+      {
+        key: "logo2Url",
+        type: "link",
+        label: "Logo 2 Link",
+        required: true,
+        multilingual: false,
+        placeholder: "https://example.com/",
+        showWhen: { key: "thirdRightType", equals: "logos" },
+      },
+      {
+        key: "logo3Image",
+        type: "image",
+        label: "Logo 3 (Optional)",
+        required: false,
+        showWhen: { key: "thirdRightType", equals: "logos" },
+      },
+      {
+        key: "logo3Url",
+        type: "link",
+        label: "Logo 3 Link (Optional)",
+        multilingual: false,
+        required: false,
+        placeholder: "https://example.com/",
+        showWhen: { key: "thirdRightType", equals: "logos" },
+      },
+      {
+        key: "logo4Image",
+        type: "image",
+        label: "Logo 4 (Optional)",
+        required: false,
+        showWhen: { key: "thirdRightType", equals: "logos" },
+      },
+      {
+        key: "logo4Url",
+        type: "link",
+        label: "Logo 4 Link (Optional)",
+        multilingual: false,
+        required: false,
+        placeholder: "https://example.com/",
+        showWhen: { key: "thirdRightType", equals: "logos" },
       },
     ],
     sampleContent: {
+      thirdRightType: "logos",
       bottomLeftText: {
         en: "<h4>These days, you can do just about anything online—even visit your doctor. So why do you still need to drive across town just to get someone to notarize a document?</h4><p>Lorem ipsum dolor sit amet consectetur adipisicing elit. In natus accusamus id dicta saepe quae illo, fugit perferendis ipsa tempora magni eius debitis asperiores, iste qui, commodi sed?</p>",
       },
+      logo1Url: "https://termly.com.au/",
+      logo2Url: "https://toyride.com/",
+      logo3Url: "https://coveryou.com/",
+      logo4Url: "https://everydaycar.com/",
+    },
+  },
+  {
+    key: "HOME_TEMPLATE_V1",
+    name: "Home Template",
+    description:
+      "Dedicated homepage layout with hero and section rows using logo + description content.",
+    fields: [
+      {
+        key: "bannerTitle",
+        type: "text",
+        label: "Banner Title",
+        required: true,
+        placeholder: "Building Enduring Ventures",
+      },
+      {
+        key: "bannerDescription",
+        type: "richText",
+        label: "Banner Description",
+        required: true,
+        placeholder: "Add the homepage intro copy...",
+      },
+      {
+        key: "bannerImage",
+        type: "image",
+        label: "Banner Image",
+        required: false,
+      },
+      ...[1, 2, 3, 4].flatMap((index) => ([
+        {
+          key: `section${index}Category`,
+          type: "text",
+          label: `Section ${index} Category`,
+          required: false,
+          placeholder: "FINTECH • EDUCATION",
+        },
+        {
+          key: `section${index}Image`,
+          type: "image",
+          label: `Section ${index} Left Image`,
+          required: true,
+        },
+        {
+          key: `section${index}Logo`,
+          type: "image",
+          label: `Section ${index} Logo`,
+          required: true,
+        },
+        {
+          key: `section${index}LogoHover`,
+          type: "image",
+          label: `Section ${index} Logo (Hover, Optional)`,
+          required: false,
+        },
+        {
+          key: `section${index}Description`,
+          type: "richText",
+          label: `Section ${index} Description`,
+          required: true,
+          placeholder: "Add section description...",
+        },
+        {
+          key: `section${index}ButtonText`,
+          type: "text",
+          label: `Section ${index} Button Text`,
+          required: false,
+          placeholder: "Read More",
+        },
+        {
+          key: `section${index}ButtonLink`,
+          type: "link",
+          label: `Section ${index} Button Link`,
+          required: false,
+          multilingual: false,
+          placeholder: "/termly",
+        },
+      ])),
+    ],
+    sampleContent: {
+      bannerTitle: { en: "Building Enduring Ventures" },
+      bannerDescription: {
+        en: "<p><span>Quad Equities</span> is a private investment and venture platform deploying disciplined capital across Australian and international markets.</p>",
+      },
+      bannerImage: "/assets/images/banner.jpg",
+
+      section1Category: { en: "FINTECH • EDUCATION" },
+      section1Image: "/assets/images/termly_img.png",
+      section1Logo: "/assets/images/termly-white.svg",
+      section1LogoHover: "/assets/images/termly-blue.svg",
+      section1Description: {
+        en: "<p>Bridging the gap between families and educational institutions through structured school fee instalment solutions.</p>",
+      },
+      section1ButtonText: { en: "Here is How" },
+      section1ButtonLink: "/termly",
+
+      section2Category: { en: "AUTOMOTIVE • SERVICES" },
+      section2Image: "/assets/images/everyday-car.jpg",
+      section2Logo: "/assets/images/everyday-car-logo-white.svg",
+      section2LogoHover: "/assets/images/everyday-car-logo-black.svg",
+      section2Description: {
+        en: "<p>Accessible, dependable car repair for Australian families and businesses.</p>",
+      },
+      section2ButtonText: { en: "Fast Fixes. Fair Prices." },
+      section2ButtonLink: "/termly",
+
+      section3Category: { en: "MOBILITY • TRANSPORT" },
+      section3Image: "/assets/images/tovride.png",
+      section3Logo: "/assets/images/tovride-white.svg",
+      section3LogoHover: "/assets/images/tovride-blue.svg",
+      section3Description: {
+        en: "<p>A next-generation mobility platform designed for convenience, precision, and smart urban travel.</p>",
+      },
+      section3ButtonText: { en: "Smart Rides, Anytime Anywhere" },
+      section3ButtonLink: "/termly",
+
+      section4Category: { en: "INSURANCE • INSURTECH" },
+      section4Image: "/assets/images/covers-you.jpg",
+      section4Logo: "/assets/images/cover-you-white.svg",
+      section4LogoHover: "/assets/images/cover-you-main.svg",
+      section4Description: {
+        en: "<p>Accessible coverage solutions designed for individuals and families across Australia.</p>",
+      },
+      section4ButtonText: { en: "Secure Today, Confident Tomorrow." },
+      section4ButtonLink: "/termly",
     },
   },
   {
@@ -530,6 +737,7 @@ export const ADDITIONAL_TEMPLATES: Array<{ value: string; label: string }> = [
 // `page_template` or `portfolio_template` in the DB; map to the shared definition.
 const PAGE_TEMPLATE_BUILT_IN_KEY = "PAGE_TEMPLATE_V1";
 const INNER_PAGE_TEMPLATE_BUILT_IN_KEY = "INNER_PAGE_V1";
+const HOME_TEMPLATE_BUILT_IN_KEY = "HOME_TEMPLATE_V1";
 
 // Helper function to get template by key
 export const getTemplateByKey = (key: string): PageTemplate | undefined => {
@@ -538,6 +746,9 @@ export const getTemplateByKey = (key: string): PageTemplate | undefined => {
   }
   if (key === "innerpage_template" || key === INNER_PAGE_TEMPLATE_BUILT_IN_KEY) {
     return PAGE_TEMPLATES.find((t) => t.key === INNER_PAGE_TEMPLATE_BUILT_IN_KEY);
+  }
+  if (key === "home_template" || key === "HOMEPAGE_V1" || key === HOME_TEMPLATE_BUILT_IN_KEY) {
+    return PAGE_TEMPLATES.find((t) => t.key === HOME_TEMPLATE_BUILT_IN_KEY);
   }
   return PAGE_TEMPLATES.find((t) => t.key === key);
 };

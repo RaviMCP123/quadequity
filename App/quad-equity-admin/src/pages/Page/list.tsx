@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { TableComponentProps, ValuesInterface } from "interface/page";
-import { InputRef, Tag } from "antd";
+import { InputRef } from "antd";
 import type { TableColumnType, TablePaginationConfig } from "antd";
 import type {
   FilterDropdownProps,
@@ -13,6 +13,8 @@ import FilterDropdown from "@components/Table/Search";
 import HighlighterFilter from "@components/Table/Highlighter";
 import DateFilterDropdownComponent from "@components/Table/DateFilterDropdownComponent";
 import ActionFilter from "@components/Table/Action";
+import SwitchComponent from "@components/Table/Switch";
+import { useUpdatePageStatusMutation } from "@services/pageApi";
 import { PAGE_LIMIT, PAGE_SIZE, LANGUAGE } from "@utils/constant/common";
 import { formatDate } from "@utils/dateFormat";
 import { JSX } from "react/jsx-runtime";
@@ -32,6 +34,7 @@ const TableComponent: React.FC<TableComponentProps> = ({
   pageSize,
   filter,
 }) => {
+  const [updatePageStatus] = useUpdatePageStatusMutation();
   const searchInput = useRef<InputRef>(null);
   const [searchText, setSearchText] = useState<string>("");
   const [searchedColumn, setSearchedColumn] = useState<string>("");
@@ -145,11 +148,23 @@ const TableComponent: React.FC<TableComponentProps> = ({
       key: "status",
       sorter: false,
       ellipsis: true,
-      render: () => {
+      render: (_text: boolean, record: ValuesInterface) => {
+        const recordId = record.id || (record as any)._id || "";
         return (
-          <Tag color={"darkgreen"} style={{ fontSize: "12px" }}>
-            Active
-          </Tag>
+          <SwitchComponent
+            isChecked={record.status !== false}
+            onChange={async (checked) => {
+              if (!recordId) return;
+              try {
+                await updatePageStatus({
+                  id: String(recordId),
+                  status: checked,
+                }).unwrap();
+              } catch (error) {
+                console.error("Failed to update page status:", error);
+              }
+            }}
+          />
         );
       },
     },
@@ -179,6 +194,7 @@ const TableComponent: React.FC<TableComponentProps> = ({
             onEditAction={() => onEditAction(recordId)}
             onDeleteAction={() => onDeleteAction(recordId)}
             isDelete={true}
+            showDeleteConfirm={false}
             isEdit={true}
           />
         );

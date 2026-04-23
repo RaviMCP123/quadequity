@@ -20,6 +20,13 @@ import { useGetPagesQuery } from "@services/pageApi";
 /** Placements offered in Quad Equity CMS (banner / quicklinks removed). */
 const PLACEMENT_OPTIONS = ["header", "footer"] as const;
 
+function normalizeCategoryName(value?: string): string {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
 function stripLegacyPlacements<T extends { type?: string } | string>(
   placements: T[],
 ): T[] {
@@ -60,6 +67,7 @@ const Index: React.FC<CmsCategoryFormProps> = ({ isOpen, closeModal, item }) => 
     { page: 1, limit: 1000 }, // Fetch all categories
     { skip: !isOpen } // Only fetch when modal is open
   );
+  const allCategories = categoriesData?.data?.results ?? [];
   
   // Fetch placement sort order counts from API (only when new placement is selected)
   const { data: placementSortOrdersData, isLoading: placementSortOrdersLoading } = useGetPlacementSortOrdersQuery(
@@ -213,6 +221,17 @@ const Index: React.FC<CmsCategoryFormProps> = ({ isOpen, closeModal, item }) => 
     // Final safety check - ensure all are strings
     return extracted.filter((p): p is string => typeof p === 'string');
   }, [placementValue]);
+
+  const existingCategoryNames = React.useMemo(() => {
+    const currentId = item?.id || (item as any)?._id;
+    return allCategories
+      .filter((category: any) => {
+        const categoryId = category?.id || category?._id;
+        return currentId ? categoryId !== currentId : true;
+      })
+      .map((category: any) => normalizeCategoryName(category?.name))
+      .filter(Boolean);
+  }, [allCategories, item]);
 
   // Detect when a new placement is selected (not in initial placements)
   useEffect(() => {
@@ -378,6 +397,14 @@ const Index: React.FC<CmsCategoryFormProps> = ({ isOpen, closeModal, item }) => 
                   maxLength: {
                     value: 250,
                     message: "Name should not exceed 250 characters.",
+                  },
+                  validate: {
+                    noEdgeSpaces: (value) =>
+                      value.trim() === value ||
+                      "No leading or trailing spaces allowed.",
+                    uniqueName: (value) =>
+                      !existingCategoryNames.includes(normalizeCategoryName(value)) ||
+                      "Category name already exists.",
                   },
                 })}
                 isInvalid={!!errors.name}

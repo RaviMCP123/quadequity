@@ -26,9 +26,13 @@ export interface ActionButtonProps {
   onRiskAssessmentAction?: () => void;
   onAvailabilityAction?: () => void;
   isDelete?: boolean;
+  isDeleteDisabled?: boolean;
   isEdit?: boolean;
   isView?: boolean;
   availability?: boolean;
+  deleteTooltip?: string;
+  deleteConfirmTitle?: string;
+  showDeleteConfirm?: boolean;
 }
 
 export interface SwitchInterface {

@@ -262,12 +262,26 @@ const TableComponent: React.FC<CmsCategoryTableComponentProps> = ({
     {
       title: "Action",
       key: "action",
-      render: (_text: string, record: CmsCategoryValuesInterface) => (
-        <ActionFilter
-          onEditAction={() => onEditAction(record.id ?? "")}
-          isEdit={true}
-        />
-      ),
+      render: (_text: string, record: CmsCategoryValuesInterface) => {
+        const recordId = record.id || (record as any)._id || "";
+        const isActive = record.status !== false;
+
+        return (
+          <ActionFilter
+            onEditAction={() => onEditAction(recordId)}
+            onDeleteAction={() => onDeleteAction(recordId)}
+            isDelete={true}
+            isDeleteDisabled={isActive}
+            deleteConfirmTitle="Are you sure you want to delete this category?"
+            deleteTooltip={
+              isActive
+                ? "Deactivate the category before deleting it"
+                : "Delete"
+            }
+            isEdit={true}
+          />
+        );
+      },
     },
   ];
 

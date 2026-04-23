@@ -56,7 +56,7 @@ const OtpInput: React.FC<OtpInputProps> = ({ length, onComplete, onChange }) => 
           onFocus={() => handleFocus(index)}
           maxLength={1}
           ref={(el) => { inputsRef.current[index] = el; }}
-          className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-center text-xl sm:text-2xl font-bold rounded-xl border-2 border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:outline-none focus:ring-4 focus:border-[#0056d2] focus:ring-[#0056d2]/20 focus:bg-white dark:focus:bg-gray-900/80 dark:focus:border-[#0056d2] transition-all duration-200"
+          className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-center text-xl sm:text-2xl font-bold rounded-xl border-2 border-brand-200 dark:border-brand-700 bg-brand-50/80 dark:bg-brand-950/50 text-brand-950 dark:text-white focus:outline-none focus:ring-4 focus:border-brand-500 focus:ring-brand-500/25 focus:bg-white dark:focus:bg-brand-950/80 dark:focus:border-brand-400 transition-all duration-200"
         />
       ))}
     </div>

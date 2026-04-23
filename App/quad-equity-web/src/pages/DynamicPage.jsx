@@ -9,6 +9,7 @@ import PortfolioTemplateRenderer from '../components/cms/PortfolioTemplateRender
 import FaqTemplateRenderer from '../components/cms/FaqTemplateRenderer';
 import RichDocumentRenderer from '../components/cms/RichDocumentRenderer';
 import InnerPageTemplateRenderer from '../components/cms/InnerPageTemplateRenderer';
+import NotFoundPage from './NotFoundPage';
 
 const HOME_SLUG = import.meta.env.VITE_HOME_PAGE_SLUG ?? 'home';
 
@@ -88,7 +89,7 @@ export default function DynamicPage() {
       return <FaqTemplateRenderer page={page} />;
     }
 
-    if (tk === 'HOMEPAGE_V1') {
+    if (tk === 'home_template' || tk === 'HOMEPAGE_V1' || cat === 'home') {
       return <HomepageTemplateRenderer page={page} />;
     }
 
@@ -128,12 +129,10 @@ export default function DynamicPage() {
 
   if (error || !page) {
     return (
-      <section className="py-5">
-        <div className="container">
-          <h1>Page not available</h1>
-          <p className="text-muted">{error || 'No content.'}</p>
-        </div>
-      </section>
+      <NotFoundPage
+        title="Page not available"
+        message={error || 'No content is available for this page.'}
+      />
     );
   }
 

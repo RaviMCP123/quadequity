@@ -64,6 +64,7 @@ export default function SignInForm() {
               src="/images/logo/logo.png"
               alt="Quad Equity"
               className="h-10 sm:h-12 md:h-14 lg:h-16 dark:hidden mx-auto"
+              style={{ filter: "brightness(0)" }}
             />
             <img
               src="/images/logo/logo.png"

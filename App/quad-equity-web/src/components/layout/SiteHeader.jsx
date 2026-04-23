@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { fetchCmsCategories } from '../../api/cms';
+import { fetchCmsCategories, fetchPageBySlug } from '../../api/cms';
 import { API_BASE_URL } from '../../lib/env';
 
 function categoryHeaderOrder(cat) {
@@ -10,10 +10,39 @@ function categoryHeaderOrder(cat) {
   return typeof cat.sortOrder === 'number' ? cat.sortOrder : 999;
 }
 
+function normalizeTemplateValue(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function isWhiteHeaderTemplate(page) {
+  if (!page) return false;
+  const templateKey = normalizeTemplateValue(page.templateKey);
+  const category = normalizeTemplateValue(page.category);
+
+  return (
+    templateKey.includes('contactus') ||
+    templateKey.includes('innerpage') ||
+    templateKey.includes('portfolio') ||
+    category.includes('contactus') ||
+    category === 'contact' ||
+    category.includes('innerpage') ||
+    category.includes('portfolio')
+  );
+}
+
+function normalizePath(path) {
+  if (!path) return '/';
+  const normalized = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path;
+  return normalized || '/';
+}
+
 export default function SiteHeader() {
   const { pathname } = useLocation();
   const [categories, setCategories] = useState([]);
   const [failed, setFailed] = useState(false);
+  const [whiteHeaderByTemplate, setWhiteHeaderByTemplate] = useState(false);
 
   useEffect(() => {
     if (!API_BASE_URL) {
@@ -35,6 +64,32 @@ export default function SiteHeader() {
       })
       .catch(() => setFailed(true));
   }, []);
+
+  useEffect(() => {
+    const currentPath = normalizePath(pathname);
+    if (!API_BASE_URL || currentPath === '/') {
+      setWhiteHeaderByTemplate(false);
+      return;
+    }
+
+    const slug = currentPath.replace(/^\//, '');
+    let cancelled = false;
+
+    fetchPageBySlug(slug)
+      .then((res) => {
+        if (cancelled) return;
+        setWhiteHeaderByTemplate(isWhiteHeaderTemplate(res?.data));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setWhiteHeaderByTemplate(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   const navLinks = useMemo(() => {
     const fallback = [
@@ -61,7 +116,10 @@ export default function SiteHeader() {
     pathname === '/portfolio' ||
     pathname.endsWith('/contact') ||
     pathname.endsWith('/contact-us') ||
-    pathname.endsWith('/portfolio');
+    pathname.endsWith('/portfolio') ||
+    whiteHeaderByTemplate;
+
+  const currentPath = normalizePath(pathname);
 
   return (
     <header className="header-section">
@@ -90,7 +148,11 @@ export default function SiteHeader() {
 
             <div className={`nav-list d-none d-lg-flex${navWhite ? ' nav-white' : ''}`}>
               {navLinks.map((item) => (
-                <Link key={item.slug} to={item.to}>
+                <Link
+                  key={item.slug}
+                  to={item.to}
+                  className={normalizePath(item.to) === currentPath ? 'nav-active' : ''}
+                >
                   {item.label}
                 </Link>
               ))}
@@ -130,7 +192,9 @@ export default function SiteHeader() {
                       .filter((item) => item.slug !== 'home')
                       .map((item) => (
                         <li key={item.slug}>
-                          <Link to={item.to}>{item.label}</Link>
+                          <Link to={item.to} className={normalizePath(item.to) === currentPath ? 'nav-active' : ''}>
+                            {item.label}
+                          </Link>
                         </li>
                       ))}
                   </ul>

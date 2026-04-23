@@ -109,8 +109,12 @@ export const updatePassword =
   async (dispatch: AppDispatch) => {
     try {
       dispatch(showLoading());
-      await agent.post<ApiResponse>(API.ADMIN_RESET_PASSWORD, params);
-      dispatch(setRequestBody(params));
+      const payload = {
+        username: params.username,
+        password: params.password,
+      };
+      await agent.post<ApiResponse>(API.ADMIN_RESET_PASSWORD, payload);
+      dispatch(setRequestBody(payload));
       navigate("/");
       dispatch(hideLoading());
     } catch {

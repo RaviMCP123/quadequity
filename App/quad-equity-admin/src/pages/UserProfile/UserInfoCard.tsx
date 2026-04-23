@@ -1,3 +1,4 @@
+import { useCallback, useEffect } from "react";
 import { Form } from "react-bootstrap";
 import { useForm, SubmitHandler } from "react-hook-form";
 import Button from "@components/button";
@@ -18,8 +19,35 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ user, refetch }) => {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({ defaultValues: user || {} });
+
+  const getFormValues = useCallback(
+    () => ({
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      mobile_number: user?.mobile_number || "",
+    }),
+    [user],
+  );
+
+  const handleOpenModal = () => {
+    reset(getFormValues());
+    openModal();
+  };
+
+  const handleCloseModal = () => {
+    reset(getFormValues());
+    closeModal();
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      reset(getFormValues());
+    }
+  }, [getFormValues, isOpen, reset]);
 
   const onSubmit: SubmitHandler<FormValues> = async (data: FormValues) => {
     const request = {
@@ -34,7 +62,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ user, refetch }) => {
       if (refetch) {
         refetch();
       }
-      closeModal();
+      handleCloseModal();
     } catch (error) {
       console.error("Failed to update profile:", error);
     }
@@ -92,7 +120,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ user, refetch }) => {
           </div>
         </div>
         <button
-          onClick={openModal}
+          onClick={handleOpenModal}
           className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
         >
           <svg
@@ -114,7 +142,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ user, refetch }) => {
         </button>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal isOpen={isOpen} onClose={handleCloseModal} className="max-w-[700px] m-4">
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
@@ -242,7 +270,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({ user, refetch }) => {
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button size="sm" type="button" variant="outline" onClick={handleCloseModal}>
                 Close
               </Button>
               <Button size="sm" type={'submit'}>Save Changes</Button>

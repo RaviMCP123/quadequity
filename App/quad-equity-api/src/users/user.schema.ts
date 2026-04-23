@@ -29,6 +29,9 @@ export interface User extends Document {
   createdAt: Date;
   updatedAt: Date;
   permission: string[];
+  resetOtpHash?: string;
+  resetOtpExpiresAt?: Date | null;
+  resetOtpVerifiedAt?: Date | null;
 }
 
 function ucFirst(v: string) {
@@ -64,6 +67,9 @@ const UserSchema = new Schema<User>(
     device_type: { type: String, required: false, default: "" },
     device_token: { type: String, required: false, default: "" },
     permission: { type: [String], required: false, default: [] },
+    resetOtpHash: { type: String, required: false, default: "" },
+    resetOtpExpiresAt: { type: Date, required: false, default: null },
+    resetOtpVerifiedAt: { type: Date, required: false, default: null },
   },
   { timestamps: true },
 );

@@ -12,6 +12,10 @@ import { Response, Request } from "express";
 import { AuthService } from "./auth.service";
 import { CryptoGuard } from "../auth/crypto.guard";
 import { LoginDto } from "./dto/login.dto";
+import {
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from "./dto/forgot-password.dto";
 import { AuditLogService } from "../audit-log/audit-log.service";
 
 @Controller("auth")
@@ -61,6 +65,32 @@ export class AuthController {
       statusCode: HttpStatus.OK,
       message: i18n.t("messages.NEW_ACCESS_TOKEN"),
       data: tokens,
+    });
+  }
+
+  @Post("forgot-password")
+  async forgotPassword(
+    @Body() body: ForgotPasswordDto,
+    @Res() res: Response,
+  ) {
+    await this.authService.sendForgotPasswordOtp(body.username);
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: "OTP sent successfully.",
+      data: {},
+    });
+  }
+
+  @Post("reset-password")
+  async resetPassword(
+    @Body() body: ResetPasswordDto,
+    @Res() res: Response,
+  ) {
+    await this.authService.resetPassword(body.username, body.password);
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: "Password updated successfully.",
+      data: {},
     });
   }
 }

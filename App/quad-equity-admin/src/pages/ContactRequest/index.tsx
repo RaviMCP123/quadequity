@@ -1,10 +1,21 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { JSX } from "react/jsx-runtime";
 import { Flex, Skeleton, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { ReloadOutlined } from "@ant-design/icons";
+import type {
+  FilterDropdownProps,
+  FilterValue,
+  SorterResult,
+} from "antd/es/table/interface";
+import type { InputRef, TableColumnType } from "antd";
+import { UndoOutlined } from "@ant-design/icons";
 import PageBreadcrumb from "@components/common/PageBreadCrumb";
 import PageMeta from "@components/common/PageMeta";
 import IconButton from "@components/Table/IconButton";
+import SearchOutlinedComponent from "@components/Table/SearchOutlined";
+import FilterDropdown from "@components/Table/Search";
+import HighlighterFilter from "@components/Table/Highlighter";
+import DateFilterDropdownComponent from "@components/Table/DateFilterDropdownComponent";
 import { useGetContactRequestsQuery } from "@services/contactRequestApi";
 import type { ContactRequest } from "interface/contactRequest";
 import { PAGE_LIMIT } from "@utils/constant/common";
@@ -31,22 +42,86 @@ function fullName(record: ContactRequest): string {
   return [first, last].filter(Boolean).join(" ") || "—";
 }
 
+type DataIndex = keyof ContactRequest | "name";
+
 const ContactRequestPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_LIMIT);
+  const [filteredInfo, setFilteredInfo] = useState<
+    Record<string, FilterValue | null>
+  >({});
+  const [sortedInfo, setSortedInfo] = useState<SorterResult<ContactRequest> | null>(
+    null,
+  );
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef<InputRef>(null);
+
+  const handleSearch = (
+    selectedKeys: string[],
+    confirm: FilterDropdownProps["confirm"],
+    dataIndex: string,
+  ) => {
+    confirm();
+    setSearchText(selectedKeys[0] || "");
+    setSearchedColumn(dataIndex);
+    setPage(1);
+  };
+
+  const handleReset = (clearFilters: () => void) => {
+    clearFilters();
+    setSearchText("");
+    setSearchedColumn("");
+    setPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setFilteredInfo({});
+    setSortedInfo(null);
+    setSearchText("");
+    setSearchedColumn("");
+    setPage(1);
+    setPageSize(PAGE_LIMIT);
+  };
+
+  const getColumnSearchProps = (
+    dataIndex: DataIndex,
+  ): TableColumnType<ContactRequest> => ({
+    filterDropdown: (props) => (
+      <FilterDropdown
+        {...props}
+        dataIndex={String(dataIndex)}
+        searchInput={searchInput as React.RefObject<InputRef>}
+        handleSearch={handleSearch}
+        handleReset={handleReset}
+        setSearchText={setSearchText}
+        setSearchedColumn={setSearchedColumn}
+      />
+    ),
+    filterIcon: () => <SearchOutlinedComponent />,
+  });
 
   const queryParams = useMemo(
     () => ({
       page,
       limit: pageSize,
-      sort: "createdAt",
-      direction: "desc",
+      sort:
+        typeof sortedInfo?.field === "string" ? sortedInfo.field : "createdAt",
+      direction: sortedInfo?.order === "ascend" ? "asc" : "desc",
+      ...(typeof filteredInfo?.name?.[0] === "string" &&
+      filteredInfo.name[0].trim()
+        ? { name: filteredInfo.name[0].trim() }
+        : {}),
+      ...(typeof filteredInfo?.createdAt?.[0] === "string" &&
+      filteredInfo.createdAt[0].trim()
+        ? { createdAt: filteredInfo.createdAt[0].trim() }
+        : {}),
     }),
-    [page, pageSize],
+    [filteredInfo, page, pageSize, sortedInfo],
   );
 
-  const { data, isLoading, isFetching, refetch } = useGetContactRequestsQuery(
+  const { data, isLoading, isFetching } = useGetContactRequestsQuery(
     queryParams,
   );
 
@@ -63,7 +138,16 @@ const ContactRequestPage: React.FC = () => {
       key: "name",
       width: colWidth,
       ellipsis: true,
-      render: (_, record) => fullName(record),
+      ...getColumnSearchProps("name"),
+      filteredValue: filteredInfo?.name || null,
+      render: (_, record) => {
+        const value = fullName(record);
+        return searchedColumn === "name" && searchText ? (
+          <HighlighterFilter search={[searchText]} text={value} />
+        ) : (
+          value
+        );
+      },
     },
     {
       title: "Email",
@@ -92,6 +176,13 @@ const ContactRequestPage: React.FC = () => {
       key: "createdAt",
       width: colWidth,
       ellipsis: true,
+      filterDropdown: (
+        props: JSX.IntrinsicAttributes & FilterDropdownProps,
+      ) => <DateFilterDropdownComponent {...props} />,
+      filteredValue: filteredInfo?.createdAt || null,
+      sorter: true,
+      sortOrder:
+        sortedInfo?.columnKey === "createdAt" ? sortedInfo.order : null,
       render: (v: unknown) => formatDateTime(v),
     },
   ];
@@ -106,9 +197,11 @@ const ContactRequestPage: React.FC = () => {
             {t("sidebar.contactRequests")}
           </Typography.Title>
           <IconButton
-            handleButtonAction={() => void refetch()}
-            title={isFetching ? "Refreshing…" : "Refresh"}
-            icon={<ReloadOutlined />}
+            handleButtonAction={handleResetFilters}
+            title={
+              isFetching ? "Loading…" : "Reset filters"
+            }
+            icon={<UndoOutlined />}
           />
         </Flex>
 
@@ -132,6 +225,12 @@ const ContactRequestPage: React.FC = () => {
               },
             }}
             scroll={{ x: tableScrollX }}
+            onChange={(pagination, filters, sorter) => {
+              setFilteredInfo(filters as Record<string, FilterValue | null>);
+              setSortedInfo(sorter as SorterResult<ContactRequest>);
+              setPage(pagination.current ?? 1);
+              setPageSize(pagination.pageSize ?? PAGE_LIMIT);
+            }}
           />
         )}
       </div>

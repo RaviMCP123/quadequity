@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Put,
+  Patch,
   Body,
   Res,
   Get,
@@ -620,6 +621,36 @@ export class PageController {
           limit: data.limit,
         },
       },
+    });
+  }
+
+  @Patch(":id/status")
+  @UseGuards(AuthGuard("jwt"), AccountActiveGuard)
+  async updateStatus(
+    @Param("id") id: string,
+    @Body() body: { status: boolean },
+    @Res() res: Response,
+    @Req() req: RequestWithUser,
+    @I18n() i18n: I18nContext,
+  ) {
+    const existingPage = await this.pageService.findOne({ _id: id });
+    await this.pageService.updatePageStatus({ status: !!body.status }, id);
+    const updatedPage = await this.pageService.findOne({ _id: id });
+
+    await this.auditLogService.createAudit({
+      table_id: id,
+      table_name: "pages",
+      oldValue: existingPage,
+      newValue: updatedPage,
+      action: "UPDATED",
+      userId: req.user.id,
+      ipAddress: req.ip,
+    });
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: i18n.t("messages.DATA_UPDATED") || "Page status updated successfully",
+      data: updatedPage,
     });
   }
 

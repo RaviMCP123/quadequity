@@ -1,12 +1,23 @@
-import { useEffect, useState } from 'react';
-import { fetchPageBySlug } from '../../api/cms';
+import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { fetchCmsCategories, fetchPageBySlug } from '../../api/cms';
 import { pickLang } from '../../utils/cmsText';
 import { API_BASE_URL } from '../../lib/env';
 
 const FOOTER_SLUG = import.meta.env.VITE_FOOTER_PAGE_SLUG ?? 'footer';
 
+function categoryFooterOrder(cat) {
+  const placements = cat.placement || [];
+  const footerPlacement = placements.find((item) => item?.type === 'footer');
+  if (footerPlacement && typeof footerPlacement.sortOrder === 'number') {
+    return footerPlacement.sortOrder;
+  }
+  return typeof cat.sortOrder === 'number' ? cat.sortOrder : 999;
+}
+
 export default function SiteFooter() {
   const [page, setPage] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     if (!API_BASE_URL || !FOOTER_SLUG) return;
@@ -16,6 +27,35 @@ export default function SiteFooter() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!API_BASE_URL) return;
+    fetchCmsCategories({ status: true, placement: 'footer' })
+      .then((res) => {
+        const list = Array.isArray(res?.data) ? res.data : [];
+        const footerCategories = list.filter(
+          (category) =>
+            category?.status !== false &&
+            Array.isArray(category?.placement) &&
+            category.placement.some((placement) => placement?.type === 'footer'),
+        );
+        footerCategories.sort((a, b) => categoryFooterOrder(a) - categoryFooterOrder(b));
+        setCategories(footerCategories);
+      })
+      .catch(() => setCategories([]));
+  }, []);
+
+  const footerLinks = useMemo(
+    () =>
+      categories
+        .filter((category) => category?.slug)
+        .map((category) => ({
+          slug: category.slug,
+          label: category.name || category.slug,
+          to: category.slug === 'home' ? '/' : `/${category.slug}`,
+        })),
+    [categories],
+  );
 
   const missionHtml = page ? pickLang(page.footerDescription) : '';
   const xUrl = page?.twitterUrl || page?.facebookUrl;
@@ -31,11 +71,10 @@ export default function SiteFooter() {
               <img src="/assets/images/logo.png" alt="" style={{ width: '200px' }} aria-label="Quad Equities" />
             </div>
           </div>
-          <div className="row w-100 g-0">
-            <div className="col-md-6 row g-0">
-              <div className="col-md-1 footer-block" />
-              <div className="col-md-11 row g-0">
-                <div className="col-md-6 py-md-5 footer-block d-flex gap-2">
+          <div className="row w-100 g-0 footer-content">
+            <div className="col-md-4 py-md-5 footer-block footer-column">
+              <div className="footer-links-panel">
+                <div className="footer-social-links">
                   {xUrl ? (
                     <a href={xUrl} target="_blank" rel="noreferrer" aria-label="X">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -93,20 +132,29 @@ export default function SiteFooter() {
                     </a>
                   )}
                 </div>
-                <div className="col-md-6 py-2 py-md-5 footer-block">
-                  <address>
-                    {addressHtml ? (
-                      renderFooterAddress(addressHtml)
-                    ) : (
-                      <>
-                        Suite 2, 86 High Street, <br /> Berwick Victoria 3806
-                      </>
-                    )}
-                  </address>
-                </div>
+                {footerLinks.length > 0 && (
+                  <div className="footer-nav footer-nav-side">
+                    {footerLinks.map((item) => (
+                      <Link key={item.slug} to={item.to}>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="col-md-6 py-md-5 pe-md-5 footer-block">
+            <div className="col-md-4 py-2 py-md-5 footer-block footer-column">
+              <address>
+                {addressHtml ? (
+                  renderFooterAddress(addressHtml)
+                ) : (
+                  <>
+                    Suite 2, 86 High Street, <br /> Berwick Victoria 3806
+                  </>
+                )}
+              </address>
+            </div>
+            <div className="col-md-4 py-md-5 pe-md-5 footer-block footer-column">
               <p>
                 {missionHtml ? (
                   <span dangerouslySetInnerHTML={{ __html: missionHtml }} />

@@ -1,6 +1,7 @@
 export interface AuthInterface {
   username?: string;
   password?: string;
+  otp?: string;
   remember_me?: boolean;
 }
 

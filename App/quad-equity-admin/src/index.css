@@ -1064,11 +1064,16 @@ span.flatpickr-weekday,
   background-color: #171f2f !important;
   color: white !important;
 }
-.ant-table-filter-trigger, .ant-table-column-sorter-inner{
-  color: white !important
+.ant-table-filter-trigger,
+.ant-table-column-sorter-inner,
+.ant-table-column-sorter .ant-table-column-sorter-full {
+  color: #475467 !important;
 }
-.ant-table-column-sorter .ant-table-column-sorter-full{
-  color: white !important
+
+.dark .ant-table-filter-trigger,
+.dark .ant-table-column-sorter-inner,
+.dark .ant-table-column-sorter .ant-table-column-sorter-full {
+  color: white !important;
 }
 .ant-table-thead {
   border-color: var(--color-brand-800) !important;
