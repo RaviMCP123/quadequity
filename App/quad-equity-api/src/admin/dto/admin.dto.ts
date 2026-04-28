@@ -1,11 +1,15 @@
 import {
   IsArray,
+  IsBoolean,
   IsEmail,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Length,
   Matches,
+  Max,
+  Min,
 } from "class-validator";
 import { IsEqualTo } from "../../validators/isEqualTo";
 
@@ -60,4 +64,38 @@ export class AdminUpdatePasswordDto {
     message: "Current password does not match. Please try again.",
   })
   confirmPassword: string;
+}
+
+export class UpdateSmtpCredentialsDto {
+  @IsNotEmpty({ message: "SMTP host is required." })
+  @IsString({ message: "SMTP host must be a string." })
+  host: string;
+
+  @IsNotEmpty({ message: "SMTP port is required." })
+  @IsInt({ message: "SMTP port must be a number." })
+  @Min(1, { message: "SMTP port must be between 1 and 65535." })
+  @Max(65535, { message: "SMTP port must be between 1 and 65535." })
+  port: number;
+
+  @IsOptional()
+  @IsBoolean({ message: "SMTP secure must be a boolean." })
+  secure?: boolean;
+
+  @IsNotEmpty({ message: "SMTP username is required." })
+  @IsEmail({}, { message: "SMTP username must be a valid email." })
+  user: string;
+
+  @IsOptional()
+  @IsString({ message: "SMTP password must be a string." })
+  pass?: string;
+
+  @IsNotEmpty({ message: "SMTP from email is required." })
+  @IsEmail({}, { message: "SMTP from must be a valid email." })
+  from: string;
+}
+
+export class SmtpTestEmailDto {
+  @IsNotEmpty({ message: "Recipient email is required." })
+  @IsEmail({}, { message: "Recipient email must be valid." })
+  to: string;
 }

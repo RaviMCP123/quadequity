@@ -82,6 +82,7 @@ export const baseApi = createApi({
     "School",
     "User",
     "CmsCategory",
+    "Settings",
   ],
   endpoints: () => ({}),
 });

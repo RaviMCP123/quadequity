@@ -27,3 +27,6 @@ export const GET_EVENT_LOG_DOWNLOAD = "monitoring/event-log/download";
 export const GET_CMS_CATEGORY = "cms/category";
 export const GET_CMS_CATEGORY_LIST = "cms/category/list";
 export const GET_CMS_CATEGORY_PLACEMENT_SORT_ORDERS = "cms/category/placement/sort-orders";
+export const GET_EMAIL_CREDENTIALS = "admin/email-credentials";
+export const UPDATE_EMAIL_CREDENTIALS = "admin/email-credentials";
+export const TEST_EMAIL_CREDENTIALS = "admin/email-credentials/test";

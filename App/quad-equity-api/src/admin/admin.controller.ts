@@ -22,13 +22,22 @@ import { AccountActiveGuard } from "../auth/jwt.guard";
 import { CryptoGuard } from "../auth/crypto.guard";
 import { FileHelper } from "../helpers/file.helper";
 import { RequestWithUser } from "../interface/common";
+import { SettingsService } from "../settings/settings.service";
 import { UsersService } from "../users/users.service";
-import { AdminUpdatePasswordDto, AdminUpdateProfileDto } from "./dto/admin.dto";
+import {
+  AdminUpdatePasswordDto,
+  AdminUpdateProfileDto,
+  SmtpTestEmailDto,
+  UpdateSmtpCredentialsDto,
+} from "./dto/admin.dto";
 
 @Controller("admin")
 @UseGuards(AuthGuard("jwt"), AccountActiveGuard, CryptoGuard)
 export class AdminController {
-  constructor(private readonly userService: UsersService) {}
+  constructor(
+    private readonly userService: UsersService,
+    private readonly settingsService: SettingsService,
+  ) {}
 
   private canEditTarget(requestUserId: string, requestRoleId: number, targetId: string) {
     if (requestRoleId === 1) return true;
@@ -162,6 +171,71 @@ export class AdminController {
       statusCode: HttpStatus.OK,
       message: i18n.t("messages.PROFILE_UPDATED"),
       data: userDetail,
+    });
+  }
+
+  @Get("email-credentials")
+  async getEmailCredentials(@Res() res: Response) {
+    const data = await this.settingsService.getSmtpForAdmin();
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: "SMTP credentials loaded successfully.",
+      data,
+    });
+  }
+
+  @Put("email-credentials")
+  async updateEmailCredentials(
+    @Req() request: RequestWithUser,
+    @Body() body: UpdateSmtpCredentialsDto,
+    @Res() res: Response,
+  ) {
+    const data = await this.settingsService.upsertSmtp(body, request.user.id.toString());
+    await this.userService.createAudit({
+      table_id: request.user.id.toString(),
+      table_name: "app_settings",
+      oldValue: null,
+      newValue: data,
+      action: "SMTP_SETTINGS_UPDATED",
+      userId: request.user.id.toString(),
+      ipAddress: request.ip,
+    });
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: "SMTP credentials saved successfully.",
+      data,
+    });
+  }
+
+  @Post("email-credentials/test")
+  async testEmailCredentials(
+    @Body() body: SmtpTestEmailDto,
+    @Res() res: Response,
+  ) {
+    const smtp = await this.settingsService.getStoredSmtp();
+    if (!smtp || !smtp.host || !smtp.port || !smtp.user || !smtp.pass || !smtp.from) {
+      throw new ForbiddenException(
+        "SMTP credentials are not configured in admin settings. Please save credentials first.",
+      );
+    }
+    const transporter = await this.settingsService.createVerifiedSmtpTransporter(smtp);
+    const info = await transporter.sendMail({
+      from: `"Quad Equity CMS" <${smtp.from}>`,
+      to: body.to,
+      subject: `Quad SMTP settings test ${Date.now()}`,
+      text: "This is a test email from the admin SMTP settings API.",
+      headers: { "X-Quad-Test": "admin-smtp-settings" },
+    });
+
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: "SMTP test email sent successfully.",
+      data: {
+        accepted: info.accepted,
+        rejected: info.rejected,
+        messageId: info.messageId,
+        response: info.response,
+      },
     });
   }
 }

@@ -4,7 +4,9 @@ import { Model } from "mongoose";
 import moment from "moment";
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
+import { randomInt } from "node:crypto";
+import { SettingsService } from "../settings/settings.service";
+import { SmtpSettings } from "../settings/settings.schema";
 import { User } from "../users/user.schema";
 import { UsersService } from "../users/users.service";
 
@@ -17,6 +19,7 @@ export class AuthService {
   constructor(
     @InjectModel("User") private userModel: Model<User>,
     private usersService: UsersService,
+    private settingsService: SettingsService,
   ) {}
 
   async generateTokens(userId: string) {
@@ -107,30 +110,46 @@ export class AuthService {
     return user;
   }
 
+  /**
+   * 6-digit numeric OTP. Hashed in DB; plain value is only sent by email.
+   * Optional: set `OTP_FIXED=123456` in .env (non-production only) for local testing.
+   */
   private generateOtp(): string {
-    return "123456";
+    const fixed = process.env.OTP_FIXED?.trim();
+    if (
+      fixed &&
+      /^\d{6}$/.test(fixed) &&
+      process.env.NODE_ENV !== "production"
+    ) {
+      return fixed;
+    }
+    return String(randomInt(100_000, 1_000_000));
   }
 
   private async sendOtpEmail(email: string, firstName: string, otp: string) {
-    const host = process.env.SMTP_HOST;
-    const port = Number(process.env.SMTP_PORT || 587);
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
-    const from = process.env.SMTP_FROM || user;
+    const smtp = await this.settingsService.getStoredSmtp();
+    const host = smtp?.host;
+    const port = smtp?.port;
+    const secure = smtp?.secure;
+    const user = smtp?.user;
+    const pass = smtp?.pass;
+    const from = smtp?.from;
 
-    if (!host || !from) {
+    if (!smtp || !host || !from || !user || !pass || !port) {
       throw new HttpException(
-        "SMTP configuration is missing. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM.",
+        "SMTP credentials are not configured in admin settings. Please save SMTP credentials in the admin panel before sending OTP.",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    const transporter = nodemailer.createTransport({
+    const transporter = await this.settingsService.createVerifiedSmtpTransporter({
       host,
       port,
-      secure: port === 465,
-      auth: user && pass ? { user, pass } : undefined,
-    });
+      secure: Boolean(secure),
+      user,
+      pass,
+      from,
+    } as SmtpSettings);
 
     await transporter.sendMail({
       from,
@@ -165,7 +184,7 @@ export class AuthService {
         resetOtpVerifiedAt: null,
       },
     );
-    // SMTP is intentionally disabled for now; use the fixed OTP above in local/dev flows.
+    await this.sendOtpEmail(user.email, user.firstName, otp);
   }
 
   async verifyResetOtp(username: string, otp: string) {

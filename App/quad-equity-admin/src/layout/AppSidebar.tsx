@@ -24,6 +24,11 @@ const getNavItems = (t: (key: string) => string): NavItem[] => [
     name: t("sidebar.contactRequests"),
     path: "/cms-management/contact-requests",
   },
+  {
+    icon: "setting.png",
+    name: t("sidebar.settings"),
+    path: "/settings/email-credentials",
+  },
 ];
 
 const AppSidebar: React.FC = () => {

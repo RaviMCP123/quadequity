@@ -4,6 +4,7 @@ import CmsCategory from "@pages/CmsCategory";
 import CmsHome from "@pages/CmsHome";
 import UserProfiles from "@pages/UserProfile";
 import ContactRequestPage from "@pages/ContactRequest";
+import EmailCredentialsPage from "@pages/Settings/EmailCredentials";
 
 interface RouteConfig {
   path: string;
@@ -34,6 +35,11 @@ const mainRoute: RouteConfig[] = [
     path: "/profile",
     component: UserProfiles,
     title: "Profile",
+  },
+  {
+    path: "/settings/email-credentials",
+    component: EmailCredentialsPage,
+    title: "SMTP Credentials",
   },
 ];
 

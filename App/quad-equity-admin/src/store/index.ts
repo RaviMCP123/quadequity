@@ -8,6 +8,7 @@ import "@services/pageApi";
 import "@services/userApi";
 import "@services/cmsCategoryApi";
 import "@services/contactRequestApi";
+import "@services/settingsApi";
 
 const persistConfig = {
   key: "quad-equity-admin-root",
