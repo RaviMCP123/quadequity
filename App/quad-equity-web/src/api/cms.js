@@ -1,6 +1,9 @@
 import { apiFetch } from './client';
 import { API_BASE_URL } from '../lib/env';
 
+const pageCache = new Map();
+const pageInFlight = new Map();
+
 /**
  * @returns {Promise<{ statusCode: number; data: object | null; message?: string }>}
  */
@@ -9,16 +12,35 @@ export async function fetchPageBySlug(slug) {
   if (!base) {
     throw new Error('VITE_API_BASE_URL is not set');
   }
-  const path = `/page/detail/${encodeURIComponent(slug)}`;
-  const res = await fetch(`${base}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = json?.message ?? res.statusText ?? 'Request failed';
-    throw new Error(msg);
+  const cacheKey = String(slug || '').trim().toLowerCase();
+
+  if (pageCache.has(cacheKey)) {
+    return pageCache.get(cacheKey);
   }
-  return json;
+
+  if (pageInFlight.has(cacheKey)) {
+    return pageInFlight.get(cacheKey);
+  }
+
+  const path = `/page/detail/${encodeURIComponent(slug)}`;
+  const requestPromise = fetch(`${base}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+  })
+    .then(async (res) => {
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = json?.message ?? res.statusText ?? 'Request failed';
+        throw new Error(msg);
+      }
+      pageCache.set(cacheKey, json);
+      return json;
+    })
+    .finally(() => {
+      pageInFlight.delete(cacheKey);
+    });
+
+  pageInFlight.set(cacheKey, requestPromise);
+  return requestPromise;
 }
 
 /**

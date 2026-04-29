@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchCmsCategories, fetchPageBySlug } from '../../api/cms';
 import { API_BASE_URL } from '../../lib/env';
@@ -40,9 +40,34 @@ function normalizePath(path) {
 
 export default function SiteHeader() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [failed, setFailed] = useState(false);
   const [whiteHeaderByTemplate, setWhiteHeaderByTemplate] = useState(false);
+  
+  const closeMobileMenu = () => {
+    const panel = document.getElementById('MenuNavbar');
+    if (!panel) return;
+    const offcanvasApi = window.bootstrap?.Offcanvas;
+    if (offcanvasApi?.getOrCreateInstance) {
+      offcanvasApi.getOrCreateInstance(panel).hide();
+      return;
+    }
+    panel.classList.remove('show');
+    panel.setAttribute('aria-hidden', 'true');
+    panel.style.visibility = 'hidden';
+    document.body.classList.remove('offcanvas-open');
+    document.querySelectorAll('.offcanvas-backdrop').forEach((el) => el.remove());
+  };
+
+  const handleMobileNavClick = (to) => (event) => {
+    event.preventDefault();
+    const nextPath = normalizePath(to);
+    if (nextPath !== currentPath) {
+      navigate(to);
+    }
+    closeMobileMenu();
+  };
 
   useEffect(() => {
     if (!API_BASE_URL) {
@@ -186,13 +211,17 @@ export default function SiteHeader() {
                 <div className="container h-100">
                   <ul className="menu-list h-100">
                     <li>
-                      <Link to="/">Home</Link>
+                      <Link to="/" onClick={handleMobileNavClick('/')}>Home</Link>
                     </li>
                     {navLinks
                       .filter((item) => item.slug !== 'home')
                       .map((item) => (
                         <li key={item.slug}>
-                          <Link to={item.to} className={normalizePath(item.to) === currentPath ? 'nav-active' : ''}>
+                          <Link
+                            to={item.to}
+                            className={normalizePath(item.to) === currentPath ? 'nav-active' : ''}
+                            onClick={handleMobileNavClick(item.to)}
+                          >
                             {item.label}
                           </Link>
                         </li>
