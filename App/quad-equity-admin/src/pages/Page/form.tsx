@@ -742,6 +742,15 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
     (item as any)?.bannerDescription || {}
   );
   const [bannerImage, setBannerImage] = useState<UploadFile[]>([]);
+  const leftSideTextValue =
+    typeof watch("description") === "string" ? (watch("description") as string) : "";
+  const hasLeftSideText = leftSideTextValue.trim().length > 0;
+  const hasHeroImage = bannerImage.length > 0;
+  const hasHeroHeadline = Object.values(bannerTitle || {}).some(
+    (value) => String(value || "").trim() !== "",
+  );
+  const disableHeroFields = hasLeftSideText;
+  const disableLeftSideText = hasHeroImage || hasHeroHeadline;
 
   // Initialize Page sections when item changes
   useEffect(() => {
@@ -1066,29 +1075,53 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
         title: isPortfolioTemplate ? section.title : {},
         subtitle: isPortfolioTemplate ? section.subtitle : {},
         description: section.description,
-        images: images.length > 0 ? images : undefined,
+        images,
         buttonText: section.buttonText && Object.keys(section.buttonText).length > 0 ? section.buttonText : undefined,
         buttonUrl: section.buttonUrl || undefined,
       };
     }) : [];
 
+    const existingBannerTitle =
+      isEditing && (item as any)?.bannerTitle && typeof (item as any).bannerTitle === "object"
+        ? (item as any).bannerTitle
+        : undefined;
     const bannerUrlFromState =
       bannerImage.length > 0 && typeof bannerImage[0]?.url === "string"
         ? bannerImage[0].url
         : undefined;
+    const existingBannerImage =
+      isEditing && typeof (item as any)?.bannerImage === "string"
+        ? String((item as any).bannerImage).trim()
+        : "";
     const hasNewBannerUpload =
       isPageTemplate && bannerImage.length > 0 && !!bannerImage[0]?.originFileObj;
+    const isBannerRemoved =
+      isPageTemplate &&
+      isEditing &&
+      !!(item as any)?.bannerImage &&
+      bannerImage.length === 0;
     const shouldKeepExistingBannerUrl =
       !!bannerUrlFromState &&
       !hasNewBannerUpload &&
       !bannerUrlFromState.startsWith("blob:");
 
+    const bannerImageValue = hasNewBannerUpload
+      ? undefined
+      : isBannerRemoved
+      ? ""
+      : shouldKeepExistingBannerUrl
+      ? bannerUrlFromState
+      : existingBannerImage || undefined;
+
+    const bannerTitleValue =
+      Object.keys(bannerTitle).length > 0 ? bannerTitle : existingBannerTitle;
+
     const pageTemplateFields = isPageTemplate ? {
       pageSections: cleanedPageSections,
-      bannerTitle: Object.keys(bannerTitle).length > 0 ? bannerTitle : undefined,
+      bannerTitle: bannerTitleValue,
       bannerDescription: Object.keys(processedBannerDescription).length > 0 ? processedBannerDescription : undefined,
       // Never persist browser preview blob URLs; backend will set real URL for new uploads.
-      bannerImage: shouldKeepExistingBannerUrl ? bannerUrlFromState : undefined,
+      bannerImage: bannerImageValue,
     } : {};
 
     // Collect template content and handle file uploads
@@ -1114,8 +1147,10 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
               // Existing image URL - keep the URL in content
               templateContent[field.key] = file.url;
             }
+          } else if (isEditing) {
+            // Explicitly clear previously saved image when removed in edit mode.
+            templateContent[field.key] = "";
           }
-          // If no file and no URL, don't include this field (image was removed)
         } else if (multilingual) {
           // Get the value directly from content object (already structured as {en: "value", es: "value"})
           const contentValue = watch('content' as any)?.[field.key];
@@ -1176,13 +1211,25 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
       ? data.title 
       : (data.title?.[languageList[0]?.code] || data.title?.[Object.keys(data.title || {})[0]] || "");
 
-    // Handle description — preserve HTML (convert multilingual object to primary language string where needed)
+    // Handle description — read latest watched value to avoid stale textarea value in submit payload.
+    const latestDescription = watch("description" as any);
+    const descriptionInput =
+      latestDescription !== undefined ? latestDescription : data.description;
+
+    // Preserve HTML (convert multilingual object to primary language string where needed)
     let descriptionValue: string | Record<string, string>;
-    if (typeof data.description === 'string') {
-      descriptionValue = data.description;
-    } else if (typeof data.description === 'object' && data.description !== null && !Array.isArray(data.description)) {
-      const firstLang = languageList[0]?.code || Object.keys(data.description)[0] || 'en';
-      descriptionValue = data.description[firstLang] || data.description[Object.keys(data.description)[0]] || " ";
+    if (typeof descriptionInput === "string") {
+      descriptionValue = descriptionInput;
+    } else if (
+      typeof descriptionInput === "object" &&
+      descriptionInput !== null &&
+      !Array.isArray(descriptionInput)
+    ) {
+      const firstLang = languageList[0]?.code || Object.keys(descriptionInput)[0] || "en";
+      descriptionValue =
+        descriptionInput[firstLang] ||
+        descriptionInput[Object.keys(descriptionInput)[0]] ||
+        " ";
     } else {
       descriptionValue = " ";
     }
@@ -1580,10 +1627,14 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                   <h5 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-1">
                     Hero (top of page)
                   </h5>
+                  <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                    Use either Hero image + Headline or Left side text.
+                  </p>
                   {/* 1) Hero / banner image (first) */}
                   <Form.Group className="mb-4">
                     <Label>Hero image</Label>
                     <Upload
+                      disabled={disableHeroFields}
                       listType="picture-card"
                       fileList={bannerImage}
                       beforeUpload={(file) => {
@@ -1664,7 +1715,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
 
                   {/* 2) Headline on the image (same as h1 in hero) */}
                   <Form.Group className="mb-4">
-                    <Label>Headline (on the hero image) <span className="text-error-500">*</span></Label>
+                    <Label>Headline (on the hero image)</Label>
             <Tabs
               activeKey={activeLang}
               type="card"
@@ -1677,6 +1728,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                           <Form.Control
                             type="text"
                             className="h-11 w-full rounded-lg border px-4 py-2.5 text-sm"
+                            disabled={disableHeroFields}
                             value={bannerTitle[lang.code] || ""}
                             onChange={(e) => {
                               setBannerTitle(prev => ({
@@ -1744,14 +1796,20 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                   </Form.Group>
 
                   <Form.Group className="mt-4 mb-0">
-                    <Label>Description text</Label>
+                    <Label>Left side text</Label>
                     <Form.Control
                       as="textarea"
                       rows={3}
                       className="w-full rounded-lg border px-4 py-2.5 text-sm min-h-[5rem]"
-                      value={typeof watch('description') === 'string' ? (watch('description') as string) : ""}
-                      onChange={(e) => setValue('description', e.target.value as any)}
-                      placeholder="Short supporting text for hero"
+                      disabled={disableLeftSideText}
+                      value={leftSideTextValue}
+                      onChange={(e) =>
+                        setValue("description", e.target.value as any, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        })
+                      }
+                      placeholder="Short left side text for hero"
                     />
                   </Form.Group>
                 </div>
@@ -1987,33 +2045,37 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                           key: lang.code,
                           label: <span className="tab-title">{lang.title}</span>,
                           children: (
-                            <Form.Control
-                              as="textarea"
-                              rows={8}
-                              className={`w-full rounded-lg border px-4 py-2.5 text-sm min-h-[12rem] ${
-                                pageSectionErrors[sectionIndex]?.description ? 'border-rose-300' : ''
+                            <div
+                              className={`rounded-lg ${
+                                pageSectionErrors[sectionIndex]?.description
+                                  ? "ring-1 ring-rose-300"
+                                  : ""
                               }`}
-                              value={section.description?.[lang.code] || ""}
-                              onChange={(e) => {
-                                const newSections = [...pageSections];
-                                newSections[sectionIndex] = {
-                                  ...newSections[sectionIndex],
-                                  description: {
-                                    ...newSections[sectionIndex].description,
-                                    [lang.code]: e.target.value,
-                                  },
-                                };
-                                setPageSections(newSections);
-                                if (pageSectionErrors[sectionIndex]?.description) {
-                                  const newErrors = { ...pageSectionErrors };
-                                  delete newErrors[sectionIndex]?.description;
-                                  if (Object.keys(newErrors[sectionIndex] || {}).length === 0) {
-                                    delete newErrors[sectionIndex];
+                            >
+                              <CKEditor
+                                keyName={`page-section-${sectionIndex}-description-${lang.code}`}
+                                value={section.description?.[lang.code] || ""}
+                                setValue={(_key, value) => {
+                                  const newSections = [...pageSections];
+                                  newSections[sectionIndex] = {
+                                    ...newSections[sectionIndex],
+                                    description: {
+                                      ...newSections[sectionIndex].description,
+                                      [lang.code]: value,
+                                    },
+                                  };
+                                  setPageSections(newSections);
+                                  if (pageSectionErrors[sectionIndex]?.description) {
+                                    const newErrors = { ...pageSectionErrors };
+                                    delete newErrors[sectionIndex]?.description;
+                                    if (Object.keys(newErrors[sectionIndex] || {}).length === 0) {
+                                      delete newErrors[sectionIndex];
+                                    }
+                                    setPageSectionErrors(newErrors);
                                   }
-                                  setPageSectionErrors(newErrors);
-                                }
-                              }}
-                            />
+                                }}
+                              />
+                            </div>
                           ),
                         }))}
                       />

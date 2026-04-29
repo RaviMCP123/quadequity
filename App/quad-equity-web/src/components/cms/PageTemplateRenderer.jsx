@@ -6,11 +6,6 @@ import { pickLang, resolveAssetUrl, stripCmsInlineStyles } from '../../utils/cms
 import { API_BASE_URL } from '../../lib/env';
 import QuadGridSection from './QuadGridSection';
 
-/** Default hero image — same as static About / Approach pages. */
-const DEFAULT_BANNER_IMAGE = '/assets/images/banner.jpg';
-
-const DEFAULT_CARD_IMAGE = '/assets/images/termly_img.png';
-
 /**
  * Renders a CMS page in the same layout as the static About (and Approach) page:
  * split hero (banner + overlay title + HeroSwiper lead on large screens), then
@@ -19,14 +14,15 @@ const DEFAULT_CARD_IMAGE = '/assets/images/termly_img.png';
 export default function PageTemplateRenderer({ page, variant = 'default' }) {
   const base = API_BASE_URL;
   const titleLine = formatBannerTitleForHero(
-    stripCmsInlineStyles(pickLang(page.bannerTitle) || pickLang(page.title) || ''),
+    stripCmsInlineStyles(pickLang(page.bannerTitle) || ''),
   );
   const bannerFromApi = resolveAssetUrl(page.bannerImage, base);
-  // Normalize admin HTML so hero intro keeps site typography/colors.
+  // Left side text: "Description text" from admin.
+  const leftDescription = stripCmsInlineStyles(pickLang(page.description) || '');
+  // Right side text: "Intro text (right column, large)" from admin.
   const swiperCopyHtml = normalizeBannerDescriptionHtml(pickLang(page.bannerDescription) || '');
-  const heroSupportText = stripCmsInlineStyles(pickLang(page.description) || '');
-  const heroImage = bannerFromApi || (titleLine || swiperCopyHtml || heroSupportText ? DEFAULT_BANNER_IMAGE : '');
-  const shouldRenderHero = Boolean(heroImage && (titleLine || swiperCopyHtml || heroSupportText));
+  const heroImage = bannerFromApi || '';
+  const shouldRenderHero = Boolean(heroImage || titleLine || leftDescription || swiperCopyHtml);
 
   const sections = Array.isArray(page.pageSections) ? page.pageSections : [];
 
@@ -37,21 +33,49 @@ export default function PageTemplateRenderer({ page, variant = 'default' }) {
           {heroImage ? (
             <div className="banner-img">
               <img src={heroImage} alt={stripHtmlToPlain(titleLine) || 'Page'} />
-              {titleLine ? (
-                <div className="content">
-                  <h1 dangerouslySetInnerHTML={{ __html: titleLine }} />
+              {titleLine || leftDescription ? (
+                <div
+                  className="content"
+                  style={{ top: 0, bottom: 0, height: "100%", justifyContent: "center" }}
+                >
+                  <div className="d-flex flex-column gap-3 w-100 align-items-start justify-content-center">
+                    {titleLine ? (
+                      <h1 style={{ width: "100%", textAlign: "left" }} dangerouslySetInnerHTML={{ __html: titleLine }} />
+                    ) : null}
+                    {leftDescription ? (
+                      <div
+                        className="cms-left-description"
+                        style={{ color: "#fff", width: "100%", textAlign: "left" }}
+                      >
+                        {renderSectionDescription(leftDescription)}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
             </div>
-          ) : titleLine ? (
-            <div className="container py-5">
-              <h1 dangerouslySetInnerHTML={{ __html: titleLine }} />
+          ) : (titleLine || leftDescription) ? (
+            <div
+              className="container py-5 d-flex flex-column align-items-start justify-content-center"
+              style={{ minHeight: "60vh" }}
+            >
+              {titleLine ? (
+                <h1 style={{ width: "100%", textAlign: "left" }} dangerouslySetInnerHTML={{ __html: titleLine }} />
+              ) : null}
+              {leftDescription ? (
+                <div
+                  className="cms-left-description mt-3"
+                  style={{ color: "#fff", width: "100%", textAlign: "left" }}
+                >
+                  {renderSectionDescription(leftDescription)}
+                </div>
+              ) : null}
             </div>
           ) : null}
-          {(swiperCopyHtml || heroSupportText)
+          {swiperCopyHtml
             ? (() => {
                 const intro = prepareHeroIntro(swiperCopyHtml);
-                if (!intro.html && !heroSupportText) return null;
+                if (!intro.html) return null;
                 const Tag = intro.tag;
                 return (
                   <div className="d-none d-lg-block banner-content">
@@ -59,9 +83,6 @@ export default function PageTemplateRenderer({ page, variant = 'default' }) {
                       <div className="slide-content">
                         {intro.html ? (
                           <Tag className="cms-banner-description" dangerouslySetInnerHTML={{ __html: intro.html }} />
-                        ) : null}
-                        {heroSupportText ? (
-                          <p dangerouslySetInnerHTML={{ __html: heroSupportText }} />
                         ) : null}
                       </div>
                     </HeroSwiper>
@@ -95,7 +116,7 @@ export default function PageTemplateRenderer({ page, variant = 'default' }) {
           Array.isArray(section.images) && section.images[0]
             ? resolveAssetUrl(section.images[0], base)
             : '';
-        const imageUrl = img || DEFAULT_CARD_IMAGE;
+        const imageUrl = img || '';
 
         const buttonText = pickLang(section.buttonText);
         const buttonUrl = section.buttonUrl || '';

@@ -1,7 +1,7 @@
 /**
  * Two-column card layout used on About / Approach pages.
  */
-export default function CardRow({ imageAlt, imageSrc = '/assets/images/termly_img.png', children, footer }) {
+export default function CardRow({ imageAlt, imageSrc, children, footer }) {
   return (
     <section className="card-section">
       <div className="container">
@@ -13,7 +13,11 @@ export default function CardRow({ imageAlt, imageSrc = '/assets/images/termly_im
               </div>
             </div>
             <div className="col-md-11 p-0 hover-child">
-              <img src={imageSrc} className="w-100 h-100" alt={imageAlt} />
+              {imageSrc ? (
+                <img src={imageSrc} className="w-100 h-100" alt={imageAlt} />
+              ) : (
+                <div className="w-100 h-100" aria-hidden="true" />
+              )}
             </div>
           </div>
           <div className="col-12 col-md-6 hover-child d-flex flex-column justify-content-between p-md-2 p-lg-5 p-4">
