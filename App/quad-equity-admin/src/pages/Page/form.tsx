@@ -749,8 +749,8 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
   const hasHeroHeadline = Object.values(bannerTitle || {}).some(
     (value) => String(value || "").trim() !== "",
   );
-  const disableHeroFields = hasLeftSideText;
-  const disableLeftSideText = hasHeroImage || hasHeroHeadline;
+  const disableHeroFields = !isPortfolioTemplate && hasLeftSideText;
+  const disableLeftSideText = !isPortfolioTemplate && (hasHeroImage || hasHeroHeadline);
 
   // Initialize Page sections when item changes
   useEffect(() => {
@@ -1627,9 +1627,11 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                   <h5 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-1">
                     Hero (top of page)
                   </h5>
-                  <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-                    Use either Hero image + Headline or Left side text.
-                  </p>
+                  {!isPortfolioTemplate && (
+                    <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
+                      Use either Hero image + Headline or Left side text.
+                    </p>
+                  )}
                   {/* 1) Hero / banner image (first) */}
                   <Form.Group className="mb-4">
                     <Label>Hero image</Label>
@@ -1795,23 +1797,25 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                     />
                   </Form.Group>
 
-                  <Form.Group className="mt-4 mb-0">
-                    <Label>Left side text</Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      className="w-full rounded-lg border px-4 py-2.5 text-sm min-h-[5rem]"
-                      disabled={disableLeftSideText}
-                      value={leftSideTextValue}
-                      onChange={(e) =>
-                        setValue("description", e.target.value as any, {
-                          shouldDirty: true,
-                          shouldTouch: true,
-                        })
-                      }
-                      placeholder="Short left side text for hero"
-                    />
-                  </Form.Group>
+                  {!isPortfolioTemplate && (
+                    <Form.Group className="mt-4 mb-0">
+                      <Label>Left side text</Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        className="w-full rounded-lg border px-4 py-2.5 text-sm min-h-[5rem]"
+                        disabled={disableLeftSideText}
+                        value={leftSideTextValue}
+                        onChange={(e) =>
+                          setValue("description", e.target.value as any, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                          })
+                        }
+                        placeholder="Short left side text for hero"
+                      />
+                    </Form.Group>
+                  )}
                 </div>
 
                 <div className="mb-2 mt-2">
