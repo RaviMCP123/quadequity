@@ -10,6 +10,8 @@ export interface TemplateField {
   helpText?: string;
   options?: Array<{ label: string; value: string }>;
   showWhen?: { key: string; equals: string };
+  /** When true (home section CTAs only), SimpleTemplateEditor shows page picker + manual URL. */
+  selectPageForRedirect?: boolean;
 }
 
 export interface PageTemplate {
@@ -252,6 +254,7 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
           required: false,
           multilingual: false,
           placeholder: "/termly",
+          selectPageForRedirect: true,
         },
       ])),
     ],

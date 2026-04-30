@@ -1614,6 +1614,8 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                   onImageChange={(key, files) => {
                     setTemplateImageFiles((prev) => ({ ...prev, [key]: files }));
                   }}
+                  allPages={allPages}
+                  excludePageId={item?.id || (item as any)?._id}
                 />
               </div>
             ) : null}

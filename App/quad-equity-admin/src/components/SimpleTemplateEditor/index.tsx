@@ -19,6 +19,16 @@ interface SimpleTemplateEditorProps {
   onContentChange: (key: string, value: any, lang?: string) => void;
   imageFiles?: Record<string, UploadFile[]>;
   onImageChange?: (key: string, files: UploadFile[]) => void;
+  /** Optional: enables page dropdown only when field has selectPageForRedirect (home template section links). */
+  allPages?: Array<{
+    id?: string;
+    _id?: string;
+    slug?: string;
+    customSlug?: string;
+    title?: string | Record<string, string>;
+  }>;
+  /** Exclude this page id from redirect targets (current edited page). */
+  excludePageId?: string;
 }
 
 const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
@@ -29,6 +39,8 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
   onContentChange,
   imageFiles = {},
   onImageChange,
+  allPages,
+  excludePageId,
 }) => {
   const getRawContentValue = (key: string): any => content?.[key];
 
@@ -163,7 +175,77 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
           </Form.Group>
         );
 
-      case "link":
+      case "link": {
+        const showPagePicker =
+          Boolean(field.selectPageForRedirect) && Array.isArray(allPages);
+
+        if (showPagePicker) {
+          const primaryLang = languageList[0]?.code || "en";
+          const selectValue = (() => {
+            if (!value) return "";
+            const match = allPages!.find((page) => {
+              const pageSlug = page.slug || page.customSlug || "";
+              return value === `/${pageSlug}`;
+            });
+            return match ? value : "";
+          })();
+
+          return (
+            <Form.Group key={`${field.key}-${lang}`} className="mb-4">
+              <Label>
+                {field.label}
+                {field.required && <span className="text-error-500">*</span>}
+              </Label>
+              <div className="mb-2">
+                <Form.Control
+                  as="select"
+                  className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700"
+                  value={selectValue}
+                  onChange={(e) => {
+                    setFieldValue(field, lang, e.target.value || "");
+                  }}
+                >
+                  <option value="">Select a page</option>
+                  {allPages!
+                    .filter((page) => {
+                      const pid = page.id || page._id;
+                      return pid !== excludePageId;
+                    })
+                    .map((page) => {
+                      const pageTitle =
+                        typeof page.title === "string"
+                          ? page.title
+                          : (page.title?.[primaryLang] ||
+                              Object.values(page.title || {})[0] ||
+                              "Untitled");
+                      const pageSlug = page.slug || page.customSlug || "";
+                      return (
+                        <option
+                          key={page.id || page._id || pageSlug}
+                          value={pageSlug ? `/${pageSlug}` : ""}
+                        >
+                          {pageTitle} {pageSlug ? `(${pageSlug})` : ""}
+                        </option>
+                      );
+                    })}
+                </Form.Control>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Or enter a custom URL or path below (e.g. external link).
+              </p>
+              <Form.Control
+                type="text"
+                className="h-11 w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700"
+                value={value}
+                onChange={(e) => {
+                  setFieldValue(field, lang, e.target.value);
+                }}
+                placeholder={field.placeholder || ""}
+              />
+            </Form.Group>
+          );
+        }
+
         return (
           <Form.Group key={`${field.key}-${lang}`} className="mb-4">
             <Label>
@@ -181,6 +263,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             />
           </Form.Group>
         );
+      }
 
       case "select":
         return (
